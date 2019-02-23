@@ -12,6 +12,7 @@ base58 = "*"
 [dev-packages]
 grpcio-tools = "*"
 pytest = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.6"

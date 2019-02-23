@@ -11,27 +11,23 @@ class TestAddress:
     @classmethod
     def setup_class(cls):
         cls.client = utils.initialize_client()
-        cls.member = cls.client.create_member(utils.generate_alias())
-
-    def test_add_address(self):
-        name = generate_nonce()
-        payload = utils.generate_address()
-        address = self.member.add_address(name, payload)
-        assert name == address.name
-        assert payload == address.address
 
     def test_add_and_get_address(self):
+        member = self.client.create_member(utils.generate_alias())
         name = generate_nonce()
         payload = utils.generate_address()
-        address = self.member.add_address(name, payload)
-        result = self.member.get_address(address.id)
+        address = member.add_address(name, payload)
+        result = member.get_address(address.id)
+        assert name == address.name
+        assert payload == address.address
         assert address == result
 
     def test_create_and_get_addresses(self):
+        member = self.client.create_member(utils.generate_alias())
         addresses = {utils.generate_nonce(): utils.generate_address() for _ in range(3)}
         for name, address in addresses.items():
-            self.member.add_address(name, address)
-        actual = {address_record.name: address_record.address for address_record in self.member.get_addresses()}
+            member.add_address(name, address)
+        actual = {address_record.name: address_record.address for address_record in member.get_addresses()}
         assert addresses == actual
 
     def test_get_addresses_not_found(self):
