@@ -285,7 +285,7 @@ class AuthenticatedClient:
         signature = Signature(key_id=signer.id, member_id=self.member_id,
                               signature=signer.sign_proto_message(address))
 
-        request = AddAddressRequest(name=name, signature=signature, address_signature=signature)
+        request = AddAddressRequest(name=name, address=address, address_signature=signature)
         with self._channel as channel:
             response = channel.stub.AddAddress(request)
         return response.address
@@ -294,7 +294,7 @@ class AuthenticatedClient:
         request = GetAddressRequest(address_id=address_id)
         with self._channel as channel:
             response = channel.stub.GetAddress(request)
-        return response  # TODO: check
+        return response.address  # TODO: check
 
     def get_addresses(self):
         request = GetAddressesRequest()

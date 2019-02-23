@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import grpc
 
+import tokenio
+from tokenio.exceptions import RequestError
 from tokenio.proto.gateway.gateway_pb2_grpc import GatewayServiceStub
 from tokenio.rpc.interceptor.metadata_interceptor import MetadataInterceptor
 
@@ -28,7 +30,7 @@ class Channel:
         def create_channel_with_interceptors(*interceptors):
             metadata_interceptor = MetadataInterceptor({
                 'token-sdk': 'python',
-                'token-sdk-version': '0.0.1',
+                'token-sdk-version': tokenio.__version__,
                 'token-dev-key': dev_key
             })
             return cls(host, port, use_ssl, metadata_interceptor, *interceptors)
@@ -39,6 +41,8 @@ class Channel:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # TODO: Error Handle
+        # print(exc_val)
         self._channel.close()
+        if exc_type is not None and issubclass(exc_type, grpc.RpcError):
+            raise RequestError(exc_val.code(), exc_val.details(), exc_val.debug_error_string())
         return False

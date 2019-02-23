@@ -5,6 +5,7 @@ import time
 
 import grpc
 
+from tokenio import utils
 from tokenio.proto.gateway.auth_pb2 import GrpcAuthPayload
 from tokenio.rpc.authentication_context import AuthenticationContext
 from tokenio.security.engines import CryptoEngine
@@ -46,6 +47,5 @@ class ClientAuthenticatorInterceptor(grpc.UnaryUnaryClientInterceptor):
         client_call_details = _ClientCallDetails(
             client_call_details.method, client_call_details.timeout, metadata,
             client_call_details.credentials)
-
         response = continuation(client_call_details, request)
         return response
