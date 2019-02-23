@@ -6,15 +6,14 @@ from tokenio.proto.member_pb2 import MemberUpdate, RecoveryRule, MemberRecoveryR
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenRequestStatePayload, TokenMember, TokenPayload
 from tokenio.rpc.authentication_context import AuthenticationContext
-from tokenio.rpc.channel import Channel
 from tokenio.security.engines import CryptoEngine
 
 
 class AuthenticatedClient:
-    def __init__(self, member_id, crypto_engine: CryptoEngine):
+    def __init__(self, member_id, crypto_engine: CryptoEngine, channel):
         self.member_id = member_id
         self.crypto_engine = crypto_engine
-        self._channel = Channel(member_id=member_id, crypto_engine=crypto_engine)
+        self._channel = channel
         self.on_behalf_of = None
         self.customer_Initiated = False
 

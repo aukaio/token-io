@@ -7,13 +7,12 @@ from tokenio.proto.gateway.gateway_pb2 import *
 from tokenio.proto.member_pb2 import Member, MemberOperation, MemberUpdate
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenMember
-from tokenio.rpc.channel import UnauthenticatedChannel
 from tokenio.security.engines import CryptoEngine
 
 
 class UnauthenticatedClient:
-    def __init__(self):
-        self._unauthenticated_channel = UnauthenticatedChannel()
+    def __init__(self, channel):
+        self._unauthenticated_channel = channel
 
     def alias_exists(self, alias: Alias) -> bool:
         return self._resolve_alias(alias).id != ''
