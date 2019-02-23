@@ -1,25 +1,21 @@
 # -*- coding: utf-8 -*-
 from tokenio import utils
+from tokenio.config import Config
 from tokenio.member import Member
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.member_pb2 import PERSONAL, BUSINESS
 from tokenio.proto.security_pb2 import Key
-from tokenio.rpc.authenticated_client import AuthenticatedClient
-from tokenio.rpc.unauthenticate_client import UnauthenticatedClient
-from tokenio.security.engines.memorycryptoengine import MemoryCryptoEngine
+from tokenio.rpc.channel import Channel
+from tokenio.rpc.client import Client
 
 
 class TokenClient:
-    TOKEN_REQUEST_TEMPLATE = 'https://{url}/request-token/{token}?state={state}'
+    TOKEN_REQUEST_TEMPLATE = '{url}/request-token/{token}?state={state}'
 
-    def __init__(self, crypto_engine=MemoryCryptoEngine):
-        self.CryptoEngine = crypto_engine
-        self._unauthenticated_client = UnauthenticatedClient()
-
-
-
-
-
+    def __init__(self, config: Config):
+        self.channel = Channel.channel_factory(config.rpc_host, config.rpc_port, config.dev_key, config.rpc_use_ssl)
+        self.CryptoEngine = config.crypto_engine
+        self._unauthenticated_client = Client.unauthenticated(self.channel)
 
     def is_alias_exists(self, alias: Alias) -> bool:
         return self._unauthenticated_client.alias_exists(alias)
@@ -47,7 +43,7 @@ class TokenClient:
                                                                     metadata=metadata, signer=signer)
 
         crypto_engine = self.CryptoEngine(created_member.id)
-        client = AuthenticatedClient(member_id, crypto_engine)  # TODO: gateway config
+        client = Client.authenticated(self.channel, member_id, crypto_engine)  # TODO: gateway config
         return Member(client)
 
     def create_business_member(self, alias):
@@ -55,7 +51,7 @@ class TokenClient:
 
     def get_member(self, member_id):
         crypto_engine = self.CryptoEngine(member_id)
-        client = AuthenticatedClient(member_id, crypto_engine)
+        client = Client.authenticated(self.channel, member_id, crypto_engine)
         # client.get_member(member_id)
         return Member(client)
 
@@ -65,6 +61,7 @@ class TokenClient:
 
     def generate_token_request_url(self, request_id, state='', csrf_token=''):
         csrf_token_hash = utils.hash_string(csrf_token)
+        pass  # TODO
 
     def get_token_request_result(self, token_request_id):
         return self._unauthenticated_client.get_token_request_result(token_request_id)
@@ -81,15 +78,15 @@ class TokenClient:
     def complete_recovery(self, member_id, recovery_operations, privileged_key, crypto_engine):
         updated_member = self._unauthenticated_client.complete_recovery(member_id, recovery_operations, privileged_key,
                                                                         crypto_engine)
-        client = AuthenticatedClient(updated_member.id, crypto_engine)
+        client = Client.authenticated(self.channel, updated_member.id, crypto_engine)
         return Member(client)
 
     def complete_recovery_with_default_rule(self, member_id, verification_id, code):
         crypto_engine = self.CryptoEngine(member_id)
         recovered_member = self._unauthenticated_client.complete_recovery_with_default_rule(member_id, verification_id,
                                                                                             code, crypto_engine)
-        client = AuthenticatedClient(recovered_member.id, crypto_engine)
-        return MemoryCryptoEngine(client)
+        client = Client.authenticated(self.channel, recovered_member.id, crypto_engine)
+        return Member(client)
 
     def parse_token_request_callback_url(self, callback_url, csrf_token=None):
         pass

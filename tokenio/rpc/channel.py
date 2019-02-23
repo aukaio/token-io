@@ -6,8 +6,8 @@ from tokenio.rpc.interceptor.metadata_interceptor import MetadataInterceptor
 
 
 class Channel:
-    def __init__(self, rpc_uri, use_ssl, *interceptors):
-        self.rpc_uri = rpc_uri
+    def __init__(self, host, port, use_ssl, *interceptors):
+        self.rpc_uri = "{}:{}".format(host, port)
         self._channel = None
         self.use_ssl = use_ssl
         self.interceptors = interceptors
@@ -24,15 +24,14 @@ class Channel:
         return stub
 
     @classmethod
-    def channel_factory(cls, rpc_uri='api-grpc.sandbox.token.io:443',
-                        dev_key='4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI', use_ssl=True):
+    def channel_factory(cls, host, port, dev_key, use_ssl=True):
         def create_channel_with_interceptors(*interceptors):
             metadata_interceptor = MetadataInterceptor({
                 'token-sdk': 'python',
                 'token-sdk-version': '0.0.1',
                 'token-dev-key': dev_key
             })
-            return cls(rpc_uri, use_ssl, metadata_interceptor, *interceptors)
+            return cls(host, port, use_ssl, metadata_interceptor, *interceptors)
 
         return create_channel_with_interceptors
 
