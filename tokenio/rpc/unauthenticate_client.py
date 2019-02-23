@@ -4,7 +4,7 @@ from typing import Union
 from tokenio import utils
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.gateway.gateway_pb2 import *
-from tokenio.proto.member_pb2 import Member, PERSONAL, BUSINESS, TRANSIENT, MemberOperation, MemberUpdate
+from tokenio.proto.member_pb2 import Member, MemberOperation, MemberUpdate
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenMember
 from tokenio.rpc.channel import UnauthenticatedChannel
@@ -125,22 +125,21 @@ class UnauthenticatedClient:
 
         signer = crypto_engine.create_signer(Key.PRIVILEGED)
 
-        request = CompleteRecoveryRequest(verification_id=verification_id, code=code, key=priveleged_key)
+        complete_request = CompleteRecoveryRequest(verification_id=verification_id, code=code, key=privileged_key)
         with self._unauthenticated_channel as channel:
-            response = channel.stub.CompleteRecovery(request)
+            complete_response = channel.stub.CompleteRecovery(complete_request)
 
         member_request = GetMemberRequest(member_id=member_id)
         with self._unauthenticated_channel as channel:
             member_response = channel.stub.GetMember(member_request)
 
-        member_recovery_operation = MemberOperation(recovery=member_response.recovery_entry)
+        member_recovery_operation = MemberOperation(recovery=complete_response.recovery_entry)
         operations = utils.to_add_key_operations([privileged_key, standard_key, low_key])
         operations.append(member_recovery_operation)
 
         member_update = MemberUpdate(member_id=member_id, prev_hash=member_response.member.last_hash,
                                      operations=operations)
 
-        # TODO: how to sign here
         signature = Signature(key_id=signer.id, member_id=member_id, signature=signer.sign_proto_message(member_update))
 
         update_member_request = UpdateMemberRequest(update=MemberUpdate, update_signature=signature)

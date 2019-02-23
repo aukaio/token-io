@@ -20,8 +20,16 @@ def hash_alias(alias):
     return base58.b58encode(digest).decode()
 
 
+def hash_string(data):
+    return hashlib.sha256(data.encode()).hexdigest()
+
+
 def proto_message_to_bytes(message):
     data = MessageToDict(message)
+    return dict_to_bytes(data)
+
+
+def dict_to_bytes(data):
     return json.dumps(data, ensure_ascii=False, separators=(',', ':'), sort_keys=True).encode()
 
 

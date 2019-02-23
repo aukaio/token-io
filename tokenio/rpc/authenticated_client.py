@@ -10,7 +10,7 @@ from tokenio.rpc.channel import Channel
 from tokenio.security.engines import CryptoEngine
 
 
-class Client:
+class AuthenticatedClient:
     def __init__(self, member_id, crypto_engine: CryptoEngine):
         self.member_id = member_id
         self.crypto_engine = crypto_engine
