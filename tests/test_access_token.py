@@ -1,3 +1,4 @@
+import time
 import urllib.parse
 
 import pytest
@@ -13,6 +14,7 @@ from tokenio.utils import generate_nonce, proto_message_to_bytes
 
 
 class TestAccessToken:
+    TOKEN_LOOKUP_POLL_FREQUENCY = 1.5
     @classmethod
     def setup_class(cls):
         cls.client = utils.initialize_client()
@@ -35,6 +37,7 @@ class TestAccessToken:
         payload = AccessTokenBuilder.create_with_alias(member2.get_first_alias()).for_address(address.id).build()
         access_token = member1.create_access_token(payload)
         member1.endorse_token(access_token, Key.STANDARD)
+        time.sleep(self.TOKEN_LOOKUP_POLL_FREQUENCY * 2)
         result = member1.get_access_tokens(limit=2, offset=None)
         token_ids = [item.id for item in result.items]
         assert access_token.id in token_ids
@@ -72,6 +75,7 @@ class TestAccessToken:
         payload = AccessTokenBuilder.create_with_alias(member1.get_first_alias()).for_address(address.id).build()
         member1.endorse_token(member1.create_access_token(payload), Key.STANDARD)
         member1.endorse_token(member1.create_access_token(payload), Key.STANDARD)
+        time.sleep(self.TOKEN_LOOKUP_POLL_FREQUENCY * 2)
         result = member1.get_access_tokens(2, None)
         assert len(result.items) == 1
 
