@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from tokenio import utils
+from tokenio.paged_items import PagedItems
 from tokenio.proto.gateway.gateway_pb2 import *
 from tokenio.proto.member_pb2 import MemberUpdate, RecoveryRule, MemberRecoveryRulesOperation, MemberOperation, \
     TrustedBeneficiary
@@ -360,7 +361,7 @@ class AuthenticatedClient:
     def endorse_token(self, token, key_level):
         signer = self.crypto_engine.create_signer(key_level)
         signature = Signature(key_id=signer.id, member_id=self.member_id,
-                              signature=signer.sign(self._token_action_from_token(token, 'ENDORSED').encode()))
+                              signature=signer.sign(self._token_action_from_token(token, 'endorsed').encode()))
 
         request = EndorseTokenRequest(token_id=token.id, signature=signature)
         with self._channel as channel:
@@ -368,10 +369,11 @@ class AuthenticatedClient:
         return response.result
 
     def get_tokens(self, token_type, limit, offset=None):
-        request = GetTokenBlobRequest(type=token_type, page=self._page_builder(limit, offset))
+        request = GetTokensRequest(type=token_type, page=self._page_builder(limit, offset))
         with self._channel as channel:
             response = channel.stub.GetTokens(request)
-        return response.tokens  # TODO: Paged
+        return PagedItems(response.tokens, offset)
+
 
     def create_customization(self, colors, display_name=None, logo=None, consent_text=None):
         request = CreateCustomizationRequest(colors=colors)

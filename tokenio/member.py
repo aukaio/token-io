@@ -10,7 +10,7 @@ from tokenio.proto.member_pb2 import MemberAliasOperation, MemberOperation, Memb
     MemberRecoveryRulesOperation, AddressRecord, TrustedBeneficiary
 from tokenio.proto.money_pb2 import Money
 from tokenio.proto.security_pb2 import Key
-from tokenio.proto.token_pb2 import TokenRequest, Token
+from tokenio.proto.token_pb2 import TokenRequest, Token, TokenPayload
 from tokenio.proto.transfer_pb2 import TransferPayload
 from tokenio.proto.transferinstructions_pb2 import TransferEndpoint
 from tokenio.rpc.authenticated_client import AuthenticatedClient
@@ -28,7 +28,10 @@ class Member:
         return self.client.get_aliases()
 
     def get_first_alias(self):
-        pass  # TODO
+        aliases = self.get_aliases()
+        if len(aliases) == 0:
+            return None
+        return aliases[0]
 
     def get_keys(self):
         return self.client.get_member(self.member_id).keys
@@ -245,14 +248,14 @@ class Member:
     def get_trusted_beneficiaries(self):
         return self.client.get_trusted_beneficiaries()
 
-    # def create_access_token(self, token_payload: Token.TokenPayload) -> Token:
-    #     return self.client.create_access_token(token_payload)
+    def create_access_token(self, token_payload: TokenPayload) -> Token:
+        return self.client.create_access_token(token_payload)
 
     # def create_access_token_for_token_request_id(self, token_payload: Token.TokenPayload,
     #                                              token_request_id: str) -> Token:
     #     return self.client.create_access_token_for_token_request_id(token_payload, token_request_id)
 
-    def get_access_tokens(self, offset: str, limit: int):
+    def get_access_tokens(self, limit: int, offset: str = None):
         return self.client.get_tokens(token_type=GetTokensRequest.ACCESS, offset=offset, limit=limit)
 
     def endorse_token(self, token: Token, key_level: int):

@@ -8,6 +8,7 @@ from tokenio.proto.member_pb2 import Member, MemberOperation, MemberUpdate
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenMember
 from tokenio.security.engines import CryptoEngine
+from tokenio.token_request import TokenRequestResult
 
 
 class UnauthenticatedClient:
@@ -53,7 +54,7 @@ class UnauthenticatedClient:
         update = MemberUpdate(member_id=member_id, operations=operations)
         signature = Signature(key_id=signer.id, member_id=member_id, signature=signer.sign_proto_message(update))
         request = UpdateMemberRequest(update=update, update_signature=signature, metadata=metadata)
-
+        # print("REQUEST: " + utils.proto_message_to_bytes(request).decode())
         with self._unauthenticated_channel as channel:
             response = channel.stub.UpdateMember(request)
         return response.member
@@ -99,8 +100,8 @@ class UnauthenticatedClient:
         request = GetTokenRequestResultRequest(token_request_id=token_request_id)
 
         with self._unauthenticated_channel as channel:
-            response = channel.stub.RetrieveTokenRequest(request)
-            # TODO: return
+            response = channel.stub.GetTokenRequestResult(request)
+        return response
 
     def get_default_agent(self) -> str:
         alias = Alias(type=Alias.DOMAIN, value='token.io')

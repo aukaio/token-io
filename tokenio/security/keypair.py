@@ -40,9 +40,8 @@ class KeyPair:
         return base64.urlsafe_b64encode(self.signing_key.sign(data)).decode().strip('=')
 
     def verify(self, message: bytes, signature: bytes):
-        verifying_key = ed25519.VerifyingKey(self.verifying_key)
         try:
-            return verifying_key.verify(signature, message)
+            return self.verifying_key.verify(signature, message)
         except ed25519.BadSignatureError:
             raise BadSignatureError("Signature verification failed.")
 
@@ -55,6 +54,11 @@ class KeyPair:
             'signing_key': base64.urlsafe_b64encode(self.signing_key.to_bytes()).decode(),
             'expires_at_ms': self.expires_at_ms
         }
+
+    @classmethod
+    def from_public_key(cls, public_key: bytes):
+        verifying_key = ed25519.VerifyingKey(public_key)
+        return cls(verifying_key=verifying_key)
 
     @classmethod
     def generate_key_from_storable_dict(cls, data):

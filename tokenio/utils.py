@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import hashlib
 import json
 import random
@@ -10,6 +11,7 @@ from google.protobuf.json_format import MessageToDict
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.member_pb2 import MemberAddKeyOperation, MemberOperation, MemberRecoveryRulesOperation, RecoveryRule, \
     MemberAliasOperation, MemberOperationMetadata, MemberOperationMetadata
+from tokenio.security.keypair import KeyPair
 
 
 def hash_alias(alias):
@@ -80,3 +82,30 @@ def create_add_alias_operation_metadata(alias):
     alias_metadata = MemberOperationMetadata.AddAliasMetadata(alias=alias, alias_hash=hash_alias(alias))
     metadata = MemberOperationMetadata(add_alias_metadata=alias_metadata)
     return metadata
+
+
+def find_keys(member, signature):
+    keys = member.keys
+    if len(keys) == 0:
+        return None
+    signature_key_id = signature.key_id
+
+    for key in keys:
+        if key.id == signature_key_id:
+            return key
+    return None
+
+
+def verify_signature(member, payload, signature):
+    key = find_keys(member, signature)
+    if not key:
+        raise Exception("CryptoKeyNotFoundException")
+
+    keypair = KeyPair.from_public_key(base64.urlsafe_b64decode(padding(key.public_key.encode())))
+    keypair.verify(proto_message_to_bytes(payload), base64.urlsafe_b64decode(padding(signature.signature.encode())))
+
+
+def padding(data: bytes):
+    missing_padding = len(data) % 4
+    data += b'=' * (4 - missing_padding)
+    return data
