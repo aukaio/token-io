@@ -216,7 +216,7 @@ class AuthenticatedClient:
         request = SetProfilePictureRequest(payload=payload)
         with self._channel as channel:
             response = channel.stub.SetProfilePicture(request)
-        return response  # TODO: Bool?
+        return response  # zero byte
 
     def get_profile_picture(self, member_id, size):
         request = GetProfilePictureRequest(member_id=member_id, size=size)

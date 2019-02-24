@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__version__ = '0.0.1-rc3'
+__version__ = '0.0.1-rc4'
 
 __all__ = ["TokenClient"]
 

@@ -178,6 +178,9 @@ class Member:
         payload = Blob.Payload(owner_id=self.member_id, type=type, name='profile', data=data, access_mode=Blob.PUBLIC)
         return self.client.set_profile_picture(payload)
 
+    def get_profile(self, member_id):
+        return self.client.get_profile(member_id)
+
     def get_profile_picture(self, member_id: str, size: int):
         return self.client.get_profile_picture(member_id, size)
 
@@ -199,6 +202,7 @@ class Member:
 
     def get_default_agent(self):
         return self.client.get_default_agent()
+
     #
     # def authorize_recovery(self, authorization: MemberRecoveryRulesOperation.Authorization):
     #     return self.client.authorize_recovery(authorization)
