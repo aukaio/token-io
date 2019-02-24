@@ -11,9 +11,10 @@ def initialize_client():
     return client
 
 
-def generate_alias():
-    email = "python-sdk-test-{}-noverify@example.com".format(generate_nonce())
-    alias = Alias(value=email, type=Alias.EMAIL)
+def generate_alias(value=None, type=Alias.EMAIL):
+    if value is None:
+        value = "python-sdk-test-{}-noverify@example.com".format(generate_nonce())
+    alias = Alias(value=value, type=type)
     return alias
 
 
