@@ -76,7 +76,7 @@ class Member:
     def remove_alias(self, alias):
         return self.remove_alias([alias])
 
-    def add_alias(self, alias_list: List[Alias]):
+    def add_aliases(self, alias_list: List[Alias]):
         operations = []
         metadata = []
         member = self.client.get_member(self.member_id)
@@ -90,6 +90,9 @@ class Member:
             metadata.append(utils.create_add_alias_operation_metadata(utils.normalize_alias(alias)))
         updated_member = self.client.update_member(member, operations, metadata)
         return updated_member  # TODO: check
+
+    def add_alias(self, alias):
+        return self.add_aliases([alias])
 
     def for_access_token(self, token_id, customer_initiated):
         pass  # TODO

@@ -29,6 +29,10 @@ def proto_message_to_bytes(message):
     return dict_to_bytes(data)
 
 
+def hash_proto_message(message):
+    return base58.b58encode(hashlib.sha256(message.SerializeToString()).digest()).decode()
+
+
 def dict_to_bytes(data):
     return json.dumps(data, ensure_ascii=False, separators=(',', ':'), sort_keys=True).encode()
 
