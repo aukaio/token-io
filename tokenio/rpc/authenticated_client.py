@@ -272,9 +272,10 @@ class AuthenticatedClient:
         request = GetBlobRequest(blob_id=blob_id)
         with self._channel as channel:
             response = channel.stub.GetBlob(request)
-        return response  # TODO: check
+        return response.blob
 
     def get_token_blob(self, token_id, blob_id):
+        # raise error
         request = GetTokenBlobRequest(token_id=token_id, blob_id=blob_id)
         with self._channel as channel:
             response = channel.stub.GetTokenBlob(request)

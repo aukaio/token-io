@@ -110,7 +110,7 @@ class Member:
     def sign_token_request_state(self, token_request_id: str, token_id: str, state: str):
         return self.client.sign_token_request_state(token_request_id, token_id, state)
 
-    def create_blob(self, owner_id: str, type: str, name: str, data: str,
+    def create_blob(self, owner_id: str, type: str, name: str, data: bytes,
                     access_mode: int = Blob.DEFAULT) -> Attachment:
         payload = Blob.Payload(owner_id=owner_id, name=name, type=type, data=data, access_mode=access_mode)
         blob_id = self.client.create_blob(payload)
