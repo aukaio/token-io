@@ -1,0 +1,17 @@
+language: python
+os:
+  - linux
+  - osx
+
+python:
+  - "3.6"
+
+install:
+  - pip install pipenv
+  - pipenv install --dev
+
+script:
+  - pipenv run py.test -vs -n 4 tests --cov
+
+notifications:
+  email: false
