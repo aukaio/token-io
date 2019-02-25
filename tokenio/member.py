@@ -14,6 +14,7 @@ from tokenio.proto.token_pb2 import TokenRequest, Token, TokenPayload
 from tokenio.proto.transfer_pb2 import TransferPayload
 from tokenio.proto.transferinstructions_pb2 import TransferEndpoint
 from tokenio.rpc.authenticated_client import AuthenticatedClient
+from tokenio.transfer_token_builder import TransferTokenBuilder
 
 
 class Member:
@@ -235,7 +236,7 @@ class Member:
         return self.client.delete_address(address_id)
 
     def create_transfer_token(self, amount: Union[int, float], currency: str):
-        pass  # TODO
+        return TransferTokenBuilder(self, amount, currency)
 
     def add_trusted_beneficiary(self, member_id: str) -> bool:
         payload = TrustedBeneficiary.Payload(member_id=member_id, nonce=utils.generate_nonce())
