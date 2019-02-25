@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import copy
 from typing import List, Optional, Union
 
 from tokenio import utils
+from tokenio.account import Account
 from tokenio.proto.address_pb2 import Address
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.blob_pb2 import Blob, Attachment
@@ -38,10 +40,13 @@ class Member:
         return self.client.get_member(self.member_id).keys
 
     def get_accounts(self):
-        pass  # TODO
+        accounts = self.client.get_accounts()
+        result = [Account(self, account, self.client) for account in accounts]
+        return result
 
-    def get_account(self):
-        pass  # TODO
+    def get_account(self, account_id):
+        account = self.client.get_account(account_id)
+        return Account(self, account, self.client)
 
     def get_balance(self, account_id: str, key_level: int):
         return self.client.get_balance(account_id, key_level)
@@ -98,8 +103,11 @@ class Member:
     def add_alias(self, alias):
         return self.add_aliases([alias])
 
-    def for_access_token(self, token_id, customer_initiated):
-        pass  # TODO
+    def for_access_token(self, token_id, customer_initiated=True):
+        # TODO: test
+        cloned = copy.deepcopy(self.client)
+        cloned.use_access_token(token_id, customer_initiated)
+        return Member(cloned)
 
     def store_token_request(self, token_request: TokenRequest):
         return self.client.store_token_request(token_request.token_payload, token_request.options,
@@ -124,33 +132,33 @@ class Member:
         attachment = Attachment(blob_id=blob_id, name=name, type=type)
         return attachment
 
-    # def redeem_token(self, token: Token, amount: Optional[int, float], currency: Optional[str],
-    #                  description: Optional[str],
-    #                  destination: Optional[TransferEndpoint] = None, ref_id: Optional[str] = None):
-    #     payload = TransferPayload(token_id=token.id, description=token.payload.description)
-    #     if destination is not None:
-    #         payload.destinations.extend([destination])
-    #
-    #     if amount is not None:
-    #         money = Money(value=str(amount))
-    #         payload.amount.CopyFrom(money)
-    #
-    #     if currency is not None:
-    #         if payload.amount.ByteSize():
-    #             payload.amount.currency = currency
-    #         else:
-    #             money = Money(currency=currency)
-    #             payload.amount.CopyFrom(money)
-    #
-    #     if description is not None:
-    #         payload.description = description
-    #
-    #     if ref_id is not None:
-    #         payload.ref_id = ref_id
-    #     else:
-    #         payload.ref_id = utils.generate_nonce()
-    #
-    #     return self.client.create_transfer(payload)
+    def redeem_token(self, token: Token, amount: Union[int, float], currency: Optional[str],
+                     description: Optional[str],
+                     destination: Optional[TransferEndpoint] = None, ref_id: Optional[str] = None):
+        payload = TransferPayload(token_id=token.id, description=token.payload.description)
+        if destination is not None:
+            payload.destinations.extend([destination])
+
+        if amount is not None:
+            money = Money(value=str(amount))
+            payload.amount.CopyFrom(money)
+
+        if currency is not None:
+            if payload.amount.ByteSize():
+                payload.amount.currency = currency
+            else:
+                money = Money(currency=currency)
+                payload.amount.CopyFrom(money)
+
+        if description is not None:
+            payload.description = description
+
+        if ref_id is not None:
+            payload.ref_id = ref_id
+        else:
+            payload.ref_id = utils.generate_nonce()
+
+        return self.client.create_transfer(payload)
 
     def _update_keys(self, operations):
         latest_member = self.client.get_member(self.member_id)
@@ -214,6 +222,7 @@ class Member:
         return self.client.authorize_recovery(authorization)
 
     def remove_non_stored_keys(self):
+        # stored_keys = self.client.crypto_engine.get
         pass  # TODO
 
     def get_blob(self, blob_id: str) -> Blob:
@@ -251,9 +260,9 @@ class Member:
     def create_access_token(self, token_payload: TokenPayload) -> Token:
         return self.client.create_access_token(token_payload)
 
-    # def create_access_token_for_token_request_id(self, token_payload: Token.TokenPayload,
-    #                                              token_request_id: str) -> Token:
-    #     return self.client.create_access_token_for_token_request_id(token_payload, token_request_id)
+    def create_access_token_for_token_request_id(self, token_payload: TokenPayload,
+                                                 token_request_id: str) -> Token:
+        return self.client.create_access_token_for_token_request_id(token_payload, token_request_id)
 
     def get_access_tokens(self, limit: int, offset: str = None):
         return self.client.get_tokens(token_type=GetTokensRequest.ACCESS, offset=offset, limit=limit)

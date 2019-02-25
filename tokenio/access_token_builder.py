@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from tokenio import utils
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.token_pb2 import TokenPayload, AccessBody, TokenMember

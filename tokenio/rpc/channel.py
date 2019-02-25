@@ -41,7 +41,6 @@ class Channel:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # print(exc_val)
         self._channel.close()
         if exc_type is not None and issubclass(exc_type, grpc.RpcError):
             raise RequestError(exc_val.code(), exc_val.details(), exc_val.debug_error_string())

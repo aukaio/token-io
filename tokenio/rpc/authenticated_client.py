@@ -48,7 +48,7 @@ class AuthenticatedClient:
         self._set_on_behalf_of()
         request = GetAccountsRequest()
         with self._channel as channel:
-            response = channel.stub.GetAccount(request)
+            response = channel.stub.GetAccounts(request)
         return response.accounts
 
     def update_member(self, member, operations, metadata=None):
@@ -160,7 +160,7 @@ class AuthenticatedClient:
             request.filter.CopyFrom(transfer_filter)
         with self._channel as channel:
             response = channel.stub.GetTransfers(request)
-        return response.transfers  # TODO: PgaedList
+        return response.transfers  # TODO: PagedList
 
     def create_transfer(self, payload):
         signer = self.crypto_engine.create_signer(Key.LOW)
@@ -180,7 +180,7 @@ class AuthenticatedClient:
     def cancel_token(self, token):
         signer = self.crypto_engine.create_signer(Key.LOW)
         signature = Signature(member_id=self.member_id, key_id=signer.id,
-                              signature=signer.sign(self._token_action_from_token(token, 'CANCELLED').encode()))
+                              signature=signer.sign(self._token_action_from_token(token, 'cancelled').encode()))
         request = CancelTokenRequest(token_id=token.id, signature=signature)
         with self._channel as channel:
             response = channel.stub.CancelToken(request)
@@ -373,7 +373,6 @@ class AuthenticatedClient:
         with self._channel as channel:
             response = channel.stub.GetTokens(request)
         return PagedItems(response.tokens, offset)
-
 
     def create_customization(self, colors, display_name=None, logo=None, consent_text=None):
         request = CreateCustomizationRequest(colors=colors)
