@@ -28,7 +28,7 @@ class TokenRequestBuilder:
         self.options[option] = value
         return self
 
-    def add_all_options(self, options):
+    def add_all_options(self, **options):
         self.options.update(options)
         return self
 
