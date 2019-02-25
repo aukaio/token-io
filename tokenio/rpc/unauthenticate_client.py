@@ -133,7 +133,7 @@ class UnauthenticatedClient:
         with self._unauthenticated_channel as channel:
             member_response = channel.stub.GetMember(member_request)
 
-        member_recovery_operation = MemberOperation(recovery=complete_response.recovery_entry)
+        member_recovery_operation = MemberOperation(recover=complete_response.recovery_entry)
         operations = utils.to_add_key_operations([privileged_key, standard_key, low_key])
         operations.append(member_recovery_operation)
 
@@ -142,7 +142,7 @@ class UnauthenticatedClient:
 
         signature = Signature(key_id=signer.id, member_id=member_id, signature=signer.sign_proto_message(member_update))
 
-        update_member_request = UpdateMemberRequest(update=MemberUpdate, update_signature=signature)
+        update_member_request = UpdateMemberRequest(update=member_update, update_signature=signature)
         with self._unauthenticated_channel as channel:
             member_update_response = channel.stub.UpdateMember(update_member_request)
 
@@ -175,7 +175,7 @@ class UnauthenticatedClient:
         # TODO: how to sign here
         signature = Signature(key_id=signer.id, member_id=member_id, signature=signer.sign_proto_message(member_update))
 
-        update_member_request = UpdateMemberRequest(update=MemberUpdate, update_signature=signature)
+        update_member_request = UpdateMemberRequest(update=member_update, update_signature=signature)
         with self._unauthenticated_channel as channel:
             member_update_response = channel.stub.UpdateMember(update_member_request)
 

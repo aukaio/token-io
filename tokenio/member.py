@@ -7,7 +7,7 @@ from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.blob_pb2 import Blob, Attachment
 from tokenio.proto.gateway.gateway_pb2 import GetTokensRequest
 from tokenio.proto.member_pb2 import MemberAliasOperation, MemberOperation, MemberRemoveKeyOperation, RecoveryRule, \
-    MemberRecoveryRulesOperation, AddressRecord, TrustedBeneficiary
+    MemberRecoveryRulesOperation, AddressRecord, TrustedBeneficiary, MemberRecoveryOperation
 from tokenio.proto.money_pb2 import Money
 from tokenio.proto.security_pb2 import Key
 from tokenio.proto.token_pb2 import TokenRequest, Token, TokenPayload
@@ -78,7 +78,7 @@ class Member:
         return updated_member  # TODO: check
 
     def remove_alias(self, alias):
-        return self.remove_alias([alias])
+        return self.remove_aliases([alias])
 
     def add_aliases(self, alias_list: List[Alias]):
         operations = []
@@ -210,9 +210,8 @@ class Member:
     def get_default_agent(self):
         return self.client.get_default_agent()
 
-    #
-    # def authorize_recovery(self, authorization: MemberRecoveryRulesOperation.Authorization):
-    #     return self.client.authorize_recovery(authorization)
+    def authorize_recovery(self, authorization: MemberRecoveryOperation.Authorization):
+        return self.client.authorize_recovery(authorization)
 
     def remove_non_stored_keys(self):
         pass  # TODO

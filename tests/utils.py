@@ -22,3 +22,7 @@ def generate_address():
     address = Address(house_number='425', street='Broadway', city='Redwood City',
                       post_code='94063', country='US')
     return address
+
+
+def repeated_composite_container_to_list(container):
+    return [alias for alias in container]
