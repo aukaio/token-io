@@ -4,8 +4,11 @@ import collections
 import grpc
 
 
-class _ClientCallDetails(collections.namedtuple('_ClientCallDetails', ('method', 'timeout', 'metadata', 'credentials')),
-                         grpc.ClientCallDetails):
+class _ClientCallDetails(
+    collections.namedtuple(
+        '_ClientCallDetails', ('method', 'timeout', 'metadata', 'credentials')
+    ), grpc.ClientCallDetails
+):
     pass
 
 
@@ -13,7 +16,9 @@ class MetadataInterceptor(grpc.UnaryUnaryClientInterceptor):
     def __init__(self, metadata: dict):
         self.metadata = metadata
 
-    def intercept_unary_unary(self, continuation, client_call_details, request):
+    def intercept_unary_unary(
+        self, continuation, client_call_details, request
+    ):
 
         metadata = []
         if client_call_details.metadata is not None:
@@ -24,7 +29,8 @@ class MetadataInterceptor(grpc.UnaryUnaryClientInterceptor):
 
         client_call_details = _ClientCallDetails(
             client_call_details.method, client_call_details.timeout, metadata,
-            client_call_details.credentials)
+            client_call_details.credentials
+        )
 
         response = continuation(client_call_details, request)
         return response

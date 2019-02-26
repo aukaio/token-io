@@ -5,7 +5,10 @@ import tokenio.member
 
 
 class Account:
-    def __init__(self, member: 'tokenio.member.Member', account, client: AuthenticatedClient):
+    def __init__(
+        self, member: 'tokenio.member.Member', account,
+        client: AuthenticatedClient
+    ):
         self.member = member
         self.account = account
         self.client = client
@@ -36,7 +39,9 @@ class Account:
         return self.balance(key_level).available
 
     def transaction(self, transaction_id, key_level):
-        return self.client.get_transaction(self.account.id, transaction_id, key_level)
+        return self.client.get_transaction(
+            self.account.id, transaction_id, key_level
+        )
 
     def transactions(self, offset: str, limit: int, key_level):
         return self.transactions(offset, limit, key_level)

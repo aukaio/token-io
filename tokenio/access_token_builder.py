@@ -9,8 +9,12 @@ class AccessTokenBuilder:
     def __init__(self, payload=None):
         self.payload = payload
         if payload is None:
-            self.payload = TokenPayload(version='1.0', ref_id=utils.generate_nonce(),
-                                        access=AccessBody(), to=TokenMember())
+            self.payload = TokenPayload(
+                version='1.0',
+                ref_id=utils.generate_nonce(),
+                access=AccessBody(),
+                to=TokenMember()
+            )
             payload_from = getattr(self.payload, 'from')
             payload_from.CopyFrom(TokenMember())
 
@@ -82,13 +86,19 @@ class AccessTokenBuilder:
         return self
 
     def for_all_transactions_at_bank(self, bank_id):
-        all_transactions = AccessBody.Resource.AllTransactionsAtBank(bank_id=bank_id)
-        resource = AccessBody.Resource(all_transactions_at_bank=all_transactions)
+        all_transactions = AccessBody.Resource.AllTransactionsAtBank(
+            bank_id=bank_id
+        )
+        resource = AccessBody.Resource(
+            all_transactions_at_bank=all_transactions
+        )
         self.__add_resource(resource)
         return self
 
     def for_account_transactions(self, account_id):
-        account_transactions = AccessBody.Resource.AccountTransactions(account_id=account_id)
+        account_transactions = AccessBody.Resource.AccountTransactions(
+            account_id=account_id
+        )
         resource = AccessBody.Resource(transactions=account_transactions)
         self.__add_resource(resource)
         return self
@@ -106,25 +116,35 @@ class AccessTokenBuilder:
         return self
 
     def for_account_balances(self, account_id):
-        account_balances = AccessBody.Resource.AccountBalance(account_id=account_id)
+        account_balances = AccessBody.Resource.AccountBalance(
+            account_id=account_id
+        )
         resource = AccessBody.Resource(balances=account_balances)
         self.__add_resource(resource)
         return self
 
     def for_all_transfer_destinations(self):
         all_destinations = AccessBody.Resource.AllTransferDestinations()
-        resource = AccessBody.Resource(all_transfer_destinations=all_destinations)
+        resource = AccessBody.Resource(
+            all_transfer_destinations=all_destinations
+        )
         self.__add_resource(resource)
         return self
 
     def for_all_transfer_destinations_at_bank(self, bank_id):
-        bank_destinations = AccessBody.Resource.AllTransferDestinationsAtBank(bank_id=bank_id)
-        resource = AccessBody.Resource(all_transfer_destinations_at_bank=bank_destinations)
+        bank_destinations = AccessBody.Resource.AllTransferDestinationsAtBank(
+            bank_id=bank_id
+        )
+        resource = AccessBody.Resource(
+            all_transfer_destinations_at_bank=bank_destinations
+        )
         self.__add_resource(resource)
         return self
 
     def for_transfer_destinations(self, account_id):
-        destinations = AccessBody.Resource.TransferDestinations(account_id=account_id)
+        destinations = AccessBody.Resource.TransferDestinations(
+            account_id=account_id
+        )
         resource = AccessBody.Resource(transfer_destinations=destinations)
         self.__add_resource(resource)
         return self
@@ -135,5 +155,7 @@ class AccessTokenBuilder:
 
     def build(self):
         if len(self.payload.access.resources) == 0:
-            raise IllegalArgumentException('At least one access resource must be set')
+            raise IllegalArgumentException(
+                'At least one access resource must be set'
+            )
         return self.payload

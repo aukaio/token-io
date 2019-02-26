@@ -43,7 +43,10 @@ class TokenRequestBuilder:
         return self
 
     def build(self):
-        return TokenRequest(self.token_payload, self.options, self.user_ref_id, self.customization_id)
+        return TokenRequest(
+            self.token_payload, self.options, self.user_ref_id,
+            self.customization_id
+        )
 
 
 class TokenRequestResult:
@@ -64,10 +67,7 @@ class TokenRequestState:
         self.state = state
 
     def serialize(self):
-        data = {
-            'csrf_token_hash': self.csrf_token_hash,
-            'state': self.state
-        }
+        data = {'csrf_token_hash': self.csrf_token_hash, 'state': self.state}
         return quote(utils.dict_to_bytes(data).decode())
 
     @classmethod
@@ -90,11 +90,16 @@ class TokenRequestCallbackParameters:
         query = urlsplit(callback_url).query
         params = {k: v[0] for k, v in parse_qs(query).items()}
         if cls.TOKEN_ID_FIELD not in params or cls.STATE_FIELD not in params:
-            raise CallbackParametersError("Invalid or missing parameters in token request query.")
+            raise CallbackParametersError(
+                "Invalid or missing parameters in token request query."
+            )
         token_id = params[cls.TOKEN_ID_FIELD]
         state_json = json.loads(params[cls.STATE_FIELD])
 
         signature_json = json.loads(params[cls.SIGNATURE_FIELD])
-        signature = Signature(member_id=signature_json['memberId'], key_id=signature_json['keyId'],
-                              signature=signature_json['signature'])
+        signature = Signature(
+            member_id=signature_json['memberId'],
+            key_id=signature_json['keyId'],
+            signature=signature_json['signature']
+        )
         return cls(token_id, state_json, signature)

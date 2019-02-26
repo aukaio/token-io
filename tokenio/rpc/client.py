@@ -10,6 +10,8 @@ class Client:
 
     @staticmethod
     def authenticated(channel, member_id, crypto_engine):
-        auth_interceptor = ClientAuthenticatorInterceptor(member_id, crypto_engine)
+        auth_interceptor = ClientAuthenticatorInterceptor(
+            member_id, crypto_engine
+        )
         auth_channel = channel(auth_interceptor)
         return AuthenticatedClient(member_id, crypto_engine, auth_channel)

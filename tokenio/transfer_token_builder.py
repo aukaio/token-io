@@ -13,14 +13,24 @@ from tokenio.proto.transferinstructions_pb2 import TransferInstructions, Transfe
 
 
 class TransferTokenBuilder:
-    def __init__(self, member: 'tokenio.member.Member', amount: typing.Union[str, float], currency: str) -> None:
+    def __init__(
+        self, member: 'tokenio.member.Member',
+        amount: typing.Union[str, float], currency: str
+    ) -> None:
         self.member = member
         self.amount = amount
         self.currency = currency
         self.payload = TokenPayload(version='1.0', to=TokenMember())
 
-        instructions = TransferInstructions(source=TransferEndpoint(), metadata=TransferInstructions.Metadata())
-        transfer_body = TransferBody(currency=currency, lifetime_amount=str(amount), redeemer=TokenMember())
+        instructions = TransferInstructions(
+            source=TransferEndpoint(),
+            metadata=TransferInstructions.Metadata()
+        )
+        transfer_body = TransferBody(
+            currency=currency,
+            lifetime_amount=str(amount),
+            redeemer=TokenMember()
+        )
         transfer_body.instructions.CopyFrom(instructions)
 
         self.payload.transfer.CopyFrom(transfer_body)
@@ -35,31 +45,45 @@ class TransferTokenBuilder:
         self.blob_payloads = []
 
     def set_account_id(self, account_id: str) -> 'TransferTokenBuilder':
-        token = BankAccount.Token(account_id=account_id, member_id=self.member.member_id)
+        token = BankAccount.Token(
+            account_id=account_id, member_id=self.member.member_id
+        )
         source_account = BankAccount(token=token)
 
-        self.payload.transfer.instructions.source.account.CopyFrom(source_account)
+        self.payload.transfer.instructions.source.account.CopyFrom(
+            source_account
+        )
         return self
 
-    def set_custom_authorization(self, bank_id: str, authorization: str) -> 'TransferTokenBuilder':
+    def set_custom_authorization(
+        self, bank_id: str, authorization: str
+    ) -> 'TransferTokenBuilder':
         custom = BankAccount.Custom(bank_id=bank_id, payload=authorization)
         source_account = BankAccount(custom=custom)
-        self.payload.transfer.instructions.source.account.CopyFrom(source_account)
+        self.payload.transfer.instructions.source.account.CopyFrom(
+            source_account
+        )
         return self
 
     def set_expires_at_ms(self, expires_at_ms: int) -> 'TransferTokenBuilder':
         self.payload.expires_at_ms = expires_at_ms
         return self
 
-    def set_effective_at_ms(self, effective_at_ms: int) -> 'TransferTokenBuilder':
+    def set_effective_at_ms(
+        self, effective_at_ms: int
+    ) -> 'TransferTokenBuilder':
         self.payload.effective_at_ms = effective_at_ms
         return self
 
-    def set_endorse_until_ms(self, endorse_until_ms: int) -> 'TransferTokenBuilder':
+    def set_endorse_until_ms(
+        self, endorse_until_ms: int
+    ) -> 'TransferTokenBuilder':
         self.payload.endorse_until_ms = endorse_until_ms
         return self
 
-    def set_change_amount(self, charge_amount: typing.Union[str, float]) -> 'TransferTokenBuilder':
+    def set_change_amount(
+        self, charge_amount: typing.Union[str, float]
+    ) -> 'TransferTokenBuilder':
         self.payload.transfer.amount = str(charge_amount)
         return self
 
@@ -71,17 +95,24 @@ class TransferTokenBuilder:
         self.payload.transfer.instructions.source.CopyFrom(source)
         return self
 
-    def add_destination(self, destination: TransferEndpoint) -> 'TransferTokenBuilder':
+    def add_destination(
+        self, destination: TransferEndpoint
+    ) -> 'TransferTokenBuilder':
         self.payload.transfer.instructions.destinations.extend([destination])
         return self
 
-    def add_attachment(self, attachment: TransferEndpoint) -> 'TransferTokenBuilder':
+    def add_attachment(
+        self, attachment: TransferEndpoint
+    ) -> 'TransferTokenBuilder':
         self.payload.transfer.attachments.extend([attachment])
         return self
 
-    def add_attachment_by_filename(self, owner_id: str, file_type: str, file_name: str,
-                                   data: bytes) -> 'TransferTokenBuilder':
-        payload = Blob.Payload(owner_id=owner_id, type=file_type, name=file_name, data=data)
+    def add_attachment_by_filename(
+        self, owner_id: str, file_type: str, file_name: str, data: bytes
+    ) -> 'TransferTokenBuilder':
+        payload = Blob.Payload(
+            owner_id=owner_id, type=file_type, name=file_name, data=data
+        )
         self.blob_payloads.append(payload)
         return self
 
@@ -96,7 +127,10 @@ class TransferTokenBuilder:
     def set_ref_id(self, ref_id: str) -> 'TransferTokenBuilder':
         ref_id_length = len(ref_id)
         if ref_id_length > 18:
-            raise IllegalArgumentException('The length of the ref_id is at most 18, got: {}'.format(ref_id_length))
+            raise IllegalArgumentException(
+                'The length of the ref_id is at most 18, got: {}'.
+                format(ref_id_length)
+            )
         self.payload.ref_id = ref_id
         return self
 
@@ -104,7 +138,9 @@ class TransferTokenBuilder:
         self.payload.transfer.pricing.CopyFrom(pricing)
         return self
 
-    def set_purpose_of_payment(self, purpose_of_payment: int) -> 'TransferTokenBuilder':
+    def set_purpose_of_payment(
+        self, purpose_of_payment: int
+    ) -> 'TransferTokenBuilder':
         self.payload.transfer.instructions.metadata.transfer_purpose = purpose_of_payment
         return self
 
@@ -130,8 +166,10 @@ class TransferTokenBuilder:
 
         attachment_uploads = []
         for blob_payload in self.blob_payloads:
-            attachment = self.member.create_blob(blob_payload.owner_id, blob_payload.type,
-                                                 blob_payload.name, blob_payload.data)
+            attachment = self.member.create_blob(
+                blob_payload.owner_id, blob_payload.type, blob_payload.name,
+                blob_payload.data
+            )
             if attachment.ByteSize() != 0:
                 attachment_uploads.append(attachment)
 

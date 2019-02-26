@@ -23,7 +23,10 @@ class CryptoEngine:
         raise NotImplementedError()
 
     def list_keys(self):
-        key_pairs = [KeyPair.generate_key_from_storable_dict(key) for key in self._storage.values()]
+        key_pairs = [
+            KeyPair.generate_key_from_storable_dict(key)
+            for key in self._storage.values()
+        ]
         return key_pairs
 
     @classmethod

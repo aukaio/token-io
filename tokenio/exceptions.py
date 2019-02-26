@@ -38,6 +38,7 @@ class CallbackParametersError(ClientError):
 class IllegalArgumentException(ClientError, ValueError):
     pass
 
+
 class CryptoKeyNotFoundException(KeyNotFoundError):
     pass
 
