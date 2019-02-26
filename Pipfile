@@ -8,12 +8,13 @@ protobuf = "*"
 grpcio = "*"
 ed25519 = "*"
 base58 = "*"
-pytest-xdist = "*"
 
 [dev-packages]
 grpcio-tools = "*"
 pytest = "*"
 pytest-cov = "*"
+pytest-xdist = "*"
+yapf = "*"
 
 [requires]
 python_version = "3.6"
