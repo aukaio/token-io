@@ -3,7 +3,10 @@ import base64
 import hashlib
 import time
 
-import ed25519
+try:
+    import ed25519
+except ImportError:
+    from pure25519 import ed25519_oop as ed25519
 
 from tokenio import utils
 from tokenio.exceptions import BadSignatureError, MissingSigningKeyError
@@ -12,7 +15,7 @@ from tokenio.proto.security_pb2 import Key
 
 class KeyPair:
     def __init__(
-        self, verifying_key, signing_key=None, level=None, expires_at_ms=None
+            self, verifying_key, signing_key=None, level=None, expires_at_ms=None
     ):
         self.verifying_key = verifying_key
         self.signing_key = signing_key
