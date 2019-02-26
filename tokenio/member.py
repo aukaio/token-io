@@ -80,7 +80,7 @@ class Member:
             operations.append(operation)
         member = self.client.get_member(self.member_id)
         updated_member = self.client.update_member(member, operations, [])
-        return updated_member  # TODO: check
+        return updated_member.ByteSize() != 0
 
     def remove_alias(self, alias):
         return self.remove_aliases([alias])
@@ -98,7 +98,7 @@ class Member:
             operations.append(utils.create_add_alias_operation(utils.normalize_alias(alias)))
             metadata.append(utils.create_add_alias_operation_metadata(utils.normalize_alias(alias)))
         updated_member = self.client.update_member(member, operations, metadata)
-        return updated_member  # TODO: check
+        return updated_member.ByteSize() != 0
 
     def add_alias(self, alias):
         return self.add_aliases([alias])
@@ -160,16 +160,16 @@ class Member:
 
         return self.client.create_transfer(payload)
 
-    def _update_keys(self, operations):
+    def __update_keys(self, operations):
         latest_member = self.client.get_member(self.member_id)
         updated_member = self.client.update_member(latest_member, operations)
-        return updated_member  # TODO: check bool
+        return updated_member.ByteSize() != 0
 
     def approve_keys(self, keys: List[Key]) -> bool:
         operations = []
         for key in keys:
             operations.append(utils.create_add_key_member_operation(key))
-        return self._update_keys(operations)
+        return self.__update_keys(operations)
 
     def approve_key(self, key: Key):
         return self.approve_keys([key])
@@ -178,7 +178,7 @@ class Member:
         operations = []
         for key_id in key_ids:
             operations.append(MemberRemoveKeyOperation(key_id=key_id))
-        return self._update_keys(operations)
+        return self.__update_keys(operations)
 
     def remove_key(self, key_id):
         return self.remove_keys([key_id])
@@ -210,7 +210,7 @@ class Member:
         recovery_operation = MemberRecoveryRulesOperation(recovery_rule=recovery_rule)
         member_operation = MemberOperation(recovery_rules=recovery_operation)
         updated_member = self.client.update_member(member, [member_operation])
-        return updated_member  # TODO: check bool
+        return updated_member.ByteSize() != 0
 
     def use_default_recovery_rule(self):
         return self.client.use_default_recovery_rule()
@@ -222,8 +222,16 @@ class Member:
         return self.client.authorize_recovery(authorization)
 
     def remove_non_stored_keys(self):
-        # stored_keys = self.client.crypto_engine.get
-        pass  # TODO
+        stored_keys = self.client.crypto_engine.list_keys()
+        stored_proto_keys = [kp.to_key() for kp in stored_keys]
+        member = self.client.get_member(self.member_id)
+        key_ids_to_remove = []
+        for key in member.get_keys():
+            if key not in stored_keys:
+                key_ids_to_remove.append(key.id)
+        if key_ids_to_remove:
+            return self.remove_keys(key_ids_to_remove)
+        return False
 
     def get_blob(self, blob_id: str) -> Blob:
         return self.client.get_blob(blob_id)

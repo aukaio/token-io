@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from tokenio import utils
-from tokenio.paged_items import PagedItems
 from tokenio.proto.gateway.gateway_pb2 import *
 from tokenio.proto.member_pb2 import MemberUpdate, RecoveryRule, MemberRecoveryRulesOperation, MemberOperation, \
     TrustedBeneficiary
@@ -16,12 +15,14 @@ class AuthenticatedClient:
         self.crypto_engine = crypto_engine
         self._channel = channel
         self.on_behalf_of = None
-        self.customer_Initiated = False
+        self.customer_initiated = False
 
-    def _set_on_behalf_of(self):
-        pass
+    def __set_on_behalf_of(self):
+        if self.on_behalf_of is not None:
+            AuthenticationContext.set_on_behalf_of(self.on_behalf_of)
+            AuthenticationContext.set_customer_initiated(self.customer_initiated)
 
-    def _set_request_signer_key_level(self, key_level):
+    def __set_request_signer_key_level(self, key_level):
         AuthenticationContext.set_key_level(key_level)
 
     def get_aliases(self):
@@ -37,7 +38,7 @@ class AuthenticatedClient:
         return response.member
 
     def get_account(self, account_id):
-        self._set_on_behalf_of()
+        self.__set_on_behalf_of()
 
         request = GetAccountRequest(account_id=account_id)
         with self._channel as channel:
@@ -45,7 +46,7 @@ class AuthenticatedClient:
         return response.account
 
     def get_accounts(self):
-        self._set_on_behalf_of()
+        self.__set_on_behalf_of()
         request = GetAccountsRequest()
         with self._channel as channel:
             response = channel.stub.GetAccounts(request)
@@ -65,8 +66,8 @@ class AuthenticatedClient:
         return response.member
 
     def get_balance(self, account_id, key_level):
-        self._set_on_behalf_of()
-        self._set_request_signer_key_level(key_level)
+        self.__set_on_behalf_of()
+        self.__set_request_signer_key_level(key_level)
 
         request = GetBalanceRequest(account_id=account_id)
         with self._channel as channel:
@@ -75,8 +76,8 @@ class AuthenticatedClient:
         return response.balance
 
     def get_balances(self, account_ids, key_level):
-        self._set_on_behalf_of()
-        self._set_request_signer_key_level(key_level)
+        self.__set_on_behalf_of()
+        self.__set_request_signer_key_level(key_level)
 
         request = GetBalancesRequest(account_id=account_ids)
         with self._channel as channel:
@@ -85,8 +86,8 @@ class AuthenticatedClient:
         return response.response
 
     def get_transaction(self, account_id, transaction_id, key_level):
-        self._set_on_behalf_of()
-        self._set_request_signer_key_level(key_level)
+        self.__set_on_behalf_of()
+        self.__set_request_signer_key_level(key_level)
 
         request = GetTransactionRequest(account_id=account_id, transaction_id=transaction_id)
 
@@ -103,15 +104,14 @@ class AuthenticatedClient:
 
     def get_transactions(self, account_id, key_level, limit, offset=None):
         # TODO: offset = None?
-        self._set_on_behalf_of()
-        self._set_request_signer_key_level(key_level)
+        self.__set_on_behalf_of()
+        self.__set_request_signer_key_level(key_level)
 
         request = GetTransactionsRequest(account_id=account_id, page=self._page_builder(offset, limit))
 
         with self._channel as channel:
             response = channel.stub.GetTransactions(request)
         # TODO: Error
-        # return pagelist
         return response.transactions
 
     def get_token(self, token_id):
@@ -128,11 +128,11 @@ class AuthenticatedClient:
 
     def use_access_token(self, access_token_id, customer_initiated=False):
         self.on_behalf_of = access_token_id
-        self.customer_Initiated = customer_initiated
+        self.customer_initiated = customer_initiated
 
     def clear_access_token(self):
         self.on_behalf_of = None
-        self.customer_Initiated = False
+        self.customer_initiated = False
 
     def store_token_request(self, payload, options, user_ref_id='', customization_id=''):
         request = StoreTokenRequestRequest(payload=payload, options=options, user_ref_id=user_ref_id,
@@ -160,7 +160,7 @@ class AuthenticatedClient:
             request.filter.CopyFrom(transfer_filter)
         with self._channel as channel:
             response = channel.stub.GetTransfers(request)
-        return response.transfers  # TODO: PagedList
+        return response
 
     def create_transfer(self, payload):
         signer = self.crypto_engine.create_signer(Key.LOW)
@@ -194,8 +194,8 @@ class AuthenticatedClient:
         return response.signature
 
     def delete_member(self):
-        self._set_on_behalf_of()
-        self._set_request_signer_key_level(Key.PRIVILEGED)
+        self.__set_on_behalf_of()
+        self.__set_request_signer_key_level(Key.PRIVILEGED)
         request = DeleteMemberRequest()
         with self._channel as channel:
             response = channel.stub.DeleteMember(request)
@@ -372,7 +372,7 @@ class AuthenticatedClient:
         request = GetTokensRequest(type=token_type, page=self._page_builder(limit, offset))
         with self._channel as channel:
             response = channel.stub.GetTokens(request)
-        return PagedItems(response.tokens, offset)
+        return response
 
     def create_customization(self, colors, display_name=None, logo=None, consent_text=None):
         request = CreateCustomizationRequest(colors=colors)

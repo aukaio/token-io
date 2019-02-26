@@ -15,6 +15,7 @@ from tokenio.utils import generate_nonce, proto_message_to_bytes
 
 class TestAccessToken:
     TOKEN_LOOKUP_POLL_FREQUENCY = 1.5
+
     @classmethod
     def setup_class(cls):
         cls.client = utils.initialize_client()
@@ -39,7 +40,7 @@ class TestAccessToken:
         member1.endorse_token(access_token, Key.STANDARD)
         time.sleep(self.TOKEN_LOOKUP_POLL_FREQUENCY * 2)
         result = member1.get_access_tokens(limit=2, offset=None)
-        token_ids = [item.id for item in result.items]
+        token_ids = [item.id for item in result.tokens]
         assert access_token.id in token_ids
 
     def test_only_one_access_token_allowed(self):
@@ -77,7 +78,7 @@ class TestAccessToken:
         member1.endorse_token(member1.create_access_token(payload), Key.STANDARD)
         time.sleep(self.TOKEN_LOOKUP_POLL_FREQUENCY * 2)
         result = member1.get_access_tokens(2, None)
-        assert len(result.items) == 1
+        assert len(result.tokens) == 1
 
     def test_auth_flow(self):
         member1 = self.client.create_member(utils.generate_alias(type=Alias.DOMAIN))
@@ -94,7 +95,8 @@ class TestAccessToken:
         state = urllib.parse.urlparse(token_request_url).query.split('=')[1]
         signature = member1.sign_token_request_state(request_id, token.id, state)
         path = 'path?tokenId={}&state={}&signature={}'.format(token.id, state,
-                                                               urllib.parse.quote(proto_message_to_bytes(signature).decode()))
+                                                              urllib.parse.quote(
+                                                                  proto_message_to_bytes(signature).decode()))
         token_request_callback_url = 'http://localhost:80/' + path
         callback = self.client.parse_token_request_callback_url(token_request_callback_url, csrf_token)
         assert original_state == callback.state

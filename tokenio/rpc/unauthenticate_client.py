@@ -8,7 +8,6 @@ from tokenio.proto.member_pb2 import Member, MemberOperation, MemberUpdate
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenMember
 from tokenio.security.engines import CryptoEngine
-from tokenio.token_request import TokenRequestResult
 
 
 class UnauthenticatedClient:
@@ -172,7 +171,6 @@ class UnauthenticatedClient:
         member_update = MemberUpdate(member_id=member_id, prev_hash=get_member_response.member.last_hash,
                                      operations=operations)
 
-        # TODO: how to sign here
         signature = Signature(key_id=signer.id, member_id=member_id, signature=signer.sign_proto_message(member_update))
 
         update_member_request = UpdateMemberRequest(update=member_update, update_signature=signature)

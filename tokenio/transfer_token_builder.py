@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import typing
 
-# import tokenio.member
+import tokenio.member
+from tokenio import utils
 from tokenio.proto.account_pb2 import BankAccount
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.blob_pb2 import Blob
@@ -11,7 +12,7 @@ from tokenio.proto.transferinstructions_pb2 import TransferInstructions, Transfe
 
 
 class TransferTokenBuilder:
-    def __init__(self, member, amount: typing.Union[str, float], currency: str) -> None:
+    def __init__(self, member: 'tokenio.member.Member', amount: typing.Union[str, float], currency: str) -> None:
         self.member = member
         self.amount = amount
         self.currency = currency
@@ -94,7 +95,7 @@ class TransferTokenBuilder:
     def set_ref_id(self, ref_id: str) -> 'TransferTokenBuilder':
         ref_id_length = len(ref_id)
         if ref_id_length > 18:
-            raise Exception('The length of the refId is at most 18, got: {}'.format(ref_id_length))
+            raise Exception('The length of the ref_id is at most 18, got: {}'.format(ref_id_length))
         self.payload.ref_id = ref_id
         return self
 

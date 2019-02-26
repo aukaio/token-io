@@ -12,7 +12,7 @@ from tokenio.token_request import TokenRequestState, TokenRequestCallbackParamet
 
 
 class TokenClient:
-    TOKEN_REQUEST_TEMPLATE = '{url}/request-token/{request_id}?state={state}'
+    TOKEN_REQUEST_TEMPLATE = '{url}/app/request-token/{request_id}?state={state}'
 
     def __init__(self, config: Config):
         self.channel = Channel.channel_factory(config.rpc_host, config.rpc_port, config.dev_key, config.rpc_use_ssl)
