@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from tokenio import utils
+from tokenio.exceptions import IllegalArgumentException
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.token_pb2 import TokenPayload, AccessBody, TokenMember
 
@@ -134,5 +135,5 @@ class AccessTokenBuilder:
 
     def build(self):
         if len(self.payload.access.resources) == 0:
-            raise Exception('At least one access resource must be set')
+            raise IllegalArgumentException('At least one access resource must be set')
         return self.payload

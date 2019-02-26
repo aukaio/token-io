@@ -3,6 +3,7 @@ import json
 from urllib.parse import quote, urlsplit, parse_qs
 
 from tokenio import utils
+from tokenio.exceptions import CallbackParametersError
 from tokenio.proto.security_pb2 import Signature
 
 
@@ -89,7 +90,7 @@ class TokenRequestCallbackParameters:
         query = urlsplit(callback_url).query
         params = {k: v[0] for k, v in parse_qs(query).items()}
         if cls.TOKEN_ID_FIELD not in params or cls.STATE_FIELD not in params:
-            raise Exception("Invalid or missing parameters in token request query.")
+            raise CallbackParametersError("Invalid or missing parameters in token request query.")
         token_id = params[cls.TOKEN_ID_FIELD]
         state_json = json.loads(params[cls.STATE_FIELD])
 

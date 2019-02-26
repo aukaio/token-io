@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 
+from tokenio.exceptions import KeyNotFoundError, KeyExpiredError
 from tokenio.security.engines import CryptoEngine
 from tokenio.security.keypair import KeyPair
 
@@ -28,7 +29,7 @@ class MemoryCryptoEngine(CryptoEngine):
             self.__storage[self.member_id] = {}
 
         if key_pair.expires_at_ms and key_pair.expires_at_ms < int(round(time.time() * 1000)):
-            raise Exception("Key {} has expired".format(key_pair.id))
+            raise KeyExpiredError("Key {} has expired".format(key_pair.id))
 
         self.__storage[self.member_id][key_pair.level] = key_pair.to_storable_dict()
         return self.__storage[self.member_id][key_pair.level]
@@ -36,14 +37,14 @@ class MemoryCryptoEngine(CryptoEngine):
     def get_key_pair_by_level(self, level):
         member = self.__storage.get(self.member_id)
         if member is None:
-            raise Exception('member {} not found'.format(self.member_id))
+            raise KeyNotFoundError('Member {} not found'.format(self.member_id))
 
         key = member.get(level)
         if key is None:
-            raise Exception("No key with level {} found".format(level))
+            raise KeyNotFoundError("No key with level {} found".format(level))
 
         if key['expires_at_ms'] and key['expires_at_ms'] < int(round(time.time() * 1000)):
-            raise Exception("Key with level {} has expired".format(level))
+            raise KeyNotFoundError("Key with level {} has expired".format(level))
 
         key_pair = KeyPair.generate_key_from_storable_dict(key)
         return key_pair
@@ -51,19 +52,19 @@ class MemoryCryptoEngine(CryptoEngine):
     def get_key_pair_by_id(self, key_id):
         member = self.__storage.get(self.member_id)
         if member is None:
-            raise Exception('member {} not found'.format(self.member_id))
+            raise KeyNotFoundError('Member {} not found'.format(self.member_id))
 
         for key in member.values():
             if key['id'] == key_id:
                 if key['expires_at_ms'] and key['expires_at_ms'] < int(round(time.time() * 1000)):
-                    raise Exception("Key with id {} has expired".format(key_id))
+                    raise KeyNotFoundError("Key with id {} has expired".format(key_id))
                 return KeyPair.generate_key_from_storable_dict(key)
-        raise Exception('No key with id {} found'.format(key_id))
+        raise KeyNotFoundError('No key with id {} found'.format(key_id))
 
     def list_keys(self):
         member = self.__storage.get(self.member_id)
         if member is None:
-            raise Exception('member {} not found'.format(self.member_id))
+            raise KeyNotFoundError('Member {} not found'.format(self.member_id))
         key_pairs = [KeyPair.generate_key_from_storable_dict(key) for key in member.values()]
         return key_pairs
 

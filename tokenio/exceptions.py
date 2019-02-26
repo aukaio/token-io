@@ -15,6 +15,33 @@ class BadSignatureError(ClientError):
     pass
 
 
+class KeyNotFoundError(ClientError):
+    pass
+
+
+class KeyExpiredError(KeyNotFoundError):
+    pass
+
+
+class InvalidStateException(ClientError):
+    pass
+
+
+class InvalidRealmException(ClientError):
+    pass
+
+
+class CallbackParametersError(ClientError):
+    pass
+
+
+class IllegalArgumentException(ClientError, ValueError):
+    pass
+
+class CryptoKeyNotFoundException(KeyNotFoundError):
+    pass
+
+
 class RequestError(RpcError, ClientError):
     def __init__(self, code, details, debug_error_string):
         self.debug_error_string = debug_error_string

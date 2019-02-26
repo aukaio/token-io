@@ -8,6 +8,7 @@ import string
 import base58
 from google.protobuf.json_format import MessageToDict
 
+from tokenio.exceptions import CryptoKeyNotFoundException
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.member_pb2 import MemberAddKeyOperation, MemberOperation, MemberRecoveryRulesOperation, RecoveryRule, \
     MemberAliasOperation, MemberOperationMetadata, MemberOperationMetadata
@@ -89,7 +90,6 @@ def find_keys(member, signature):
     if len(keys) == 0:
         return None
     signature_key_id = signature.key_id
-
     for key in keys:
         if key.id == signature_key_id:
             return key
@@ -99,7 +99,7 @@ def find_keys(member, signature):
 def verify_signature(member, payload, signature):
     key = find_keys(member, signature)
     if not key:
-        raise Exception("CryptoKeyNotFoundException")
+        raise CryptoKeyNotFoundException("signature key id: {}".format(signature.key_id))
 
     keypair = KeyPair.from_public_key(base64.urlsafe_b64decode(padding(key.public_key.encode())))
     keypair.verify(proto_message_to_bytes(payload), base64.urlsafe_b64decode(padding(signature.signature.encode())))

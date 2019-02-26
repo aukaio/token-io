@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from tokenio import utils
 from tokenio.config import Config
+from tokenio.exceptions import InvalidStateException
 from tokenio.member import Member
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.member_pb2 import PERSONAL, BUSINESS
@@ -99,7 +100,7 @@ class TokenClient:
         parameters = TokenRequestCallbackParameters.create(callback_url)
         state = TokenRequestState.parse(parameters.state)
         if state.csrf_token_hash != utils.hash_string(csrf_token):
-            raise Exception("InvalidStateException")
+            raise InvalidStateException("InvalidStateException")
 
         payload = TokenRequestStatePayload(token_id=parameters.token_id, state=state.serialize())
         utils.verify_signature(member, payload, parameters.signature)

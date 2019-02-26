@@ -4,6 +4,7 @@ from typing import List, Optional, Union
 
 from tokenio import utils
 from tokenio.account import Account
+from tokenio.exceptions import InvalidRealmException
 from tokenio.proto.address_pb2 import Address
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.blob_pb2 import Blob, Attachment
@@ -93,7 +94,7 @@ class Member:
             partner_id = member.partner_id
             if partner_id and partner_id != 'token':
                 if alias.realm and alias.realm != partner_id:
-                    raise Exception("InvalidRealmException")  # TODO
+                    raise InvalidRealmException("Invalid realm {}; expected: {}".format(alias.realm, partner_id))
                 alias.realm = partner_id
             operations.append(utils.create_add_alias_operation(utils.normalize_alias(alias)))
             metadata.append(utils.create_add_alias_operation_metadata(utils.normalize_alias(alias)))

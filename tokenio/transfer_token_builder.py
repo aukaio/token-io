@@ -3,6 +3,7 @@ import typing
 
 import tokenio.member
 from tokenio import utils
+from tokenio.exceptions import IllegalArgumentException
 from tokenio.proto.account_pb2 import BankAccount
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.blob_pb2 import Blob
@@ -95,7 +96,7 @@ class TransferTokenBuilder:
     def set_ref_id(self, ref_id: str) -> 'TransferTokenBuilder':
         ref_id_length = len(ref_id)
         if ref_id_length > 18:
-            raise Exception('The length of the ref_id is at most 18, got: {}'.format(ref_id_length))
+            raise IllegalArgumentException('The length of the ref_id is at most 18, got: {}'.format(ref_id_length))
         self.payload.ref_id = ref_id
         return self
 
@@ -114,7 +115,7 @@ class TransferTokenBuilder:
     def build(self) -> TokenPayload:
         to = self.payload.to
         if len(to.id) == 0 and to.alias.ByteSize() == 0:
-            raise Exception('No payee on token request')
+            raise IllegalArgumentException('No payee on token request')
         return self.payload
 
     def build_with_blob_attachments(self) -> TokenPayload:
@@ -122,7 +123,7 @@ class TransferTokenBuilder:
 
         redeemer = self.payload.transfer.redeemer()
         if len(redeemer.id) == 0 and redeemer.alias.ByteSize() == 0:
-            raise Exception('No redeemer on token')
+            raise IllegalArgumentException('No redeemer on token')
 
         if len(self.payload.ref_id) == 0:
             self.payload.ref_id = utils.generate_nonce()
