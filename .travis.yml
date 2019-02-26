@@ -17,6 +17,9 @@ install:
 script:
   - pipenv run py.test -vs -n 4 tests --cov
 
+after_success:
+  - pipenv run codecov
+
 notifications:
   email: false
 
@@ -24,7 +27,7 @@ deploy:
   provider: pypi
   user: overcat_build_bot
   password:
-    secure: Iw+1oY1M1Bda+j3s0K87zkqdfiU8OqgxLmdsHW4MffpOXdtDSGPqQei0jQen/OKg8laoOId2pJmBye5OHO+cvniT4KI6alAixfqTQkykL6JRdzmsbchCPXnGYox8CjrYd0ABMtrEqfUIW2XzZIslSE7j7nVLzzVdPnmemKyfOQVLCEL3pSTUdGkrfE3/Dh1rp8y7oEKWeq39VHwSBvMSNpFLfDnO0OTxnEAO+FZPgFLpA6tphe5aVcwbUJOc86Cs9JmLuJb6hkyXRSvuRyTz65o5KCUsRwG32nRq1LvV3WAU1UjtHCsqsm0ZoLg/qVqjvOc+Y73O+Gbv8QoE+ihrQshIniNVJMz7He6sNH0cr7oZGsNkzn13+mys7MqgaG6UustdfyqzUhXglFYlZSrprg+jRt5UiVywYobtE09zX40PFtal9EMws40SCTReg+D0ogQgHy6Zp0UGDhYgTJECFsb76UJE2xL1Uq9LVD73fWtTZxY83ZSOrWY4wBnp5SEdNexiLH5LyvgKJiBGe6yD6Rd22gtvI9J8ymsEvub7Lf+PU/niGYjotkOvSLskbQLKIq/38Dgn4847M/OInrNDvMTN/rin2ubDEPF0jrr9N6W6gPXxYqthmK/giNMeYtQ9tVYG5OGVawAm7/2U7Lm5dPxSE88wyFUIPNdwDis2dgo=
+    secure: d26j1x65KB4TwXh0a/pPxU2P/KmlDdIdXoc5v/AEe+lOL/YfBDDCoBmp9GGyR7EGPhd1SmZlMeHQ6mCbCzBta8eSfbzcjWv6rREZrQIjiCJB2z+HJVHXBGD6dZ5UGozrHqotL395r8a3sAM0k/22fBed1lHDbFLvyyDo7yIeEp3Ua1oyB2rx8TF8/jl3sGD2v+Zv7t5x+uvspZ7gshx0ODmwdK9jttiRdrHHiVxFtVcU2QQlbTzNHSOd1Ff+vxb7vamcHjsMdLIwg1lkjDcruRclYJAJ2Vyl/JwKkkxk55D8qXP3N5u71yMeD/Z7OKE4k2oOf7/Qch0JvbWQT0IYdV54pBGze65WhSt7On+qRnD/qMsJ+lEMx32ol1k0gefXNQcaunGum+cjxyltxr8A8+e06WgYcl2AzQfcK0V/J2dy/1OLwOqnEDFt8peadaXoxD0nIDN4QN64uoWbQuF92W/O8f93nyYlAbsexXr06FPBZsfXzVgKz2pM3uHgtltFyRYWvURQ6PZ1Bioiz9batAPHXgGtoMUTo+OtaLdnknsMeKe62+q9DVln+tzRczrFK2NS2cmHw63unc69qUpv5gYioVoEGZWZg0ACCbYgmQu7B9aQfVD/QfshWT8bfrqa2Eiye68MLSdvCi27UMWVfjTpSn2fZ+L+LXfNX5ZyQk8=
   skip_existing: true
   distributions: sdist bdist_wheel
   on:

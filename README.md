@@ -1,6 +1,7 @@
 # [Token](https://token.io) Python SDK
 
 ![PyPI](https://img.shields.io/pypi/v/TokenIO.svg?style=popout-square)
+![Travis (.org) branch](https://img.shields.io/travis/overcat/token-io/master.svg?style=popout-square)
 
 **The SDK is still under development, might be unstable, use at your own risk.**
 

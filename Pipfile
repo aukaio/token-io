@@ -15,6 +15,7 @@ pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 yapf = "*"
+codecov = "*"
 
 [requires]
 python_version = "3.6"
