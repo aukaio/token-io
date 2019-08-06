@@ -5,33 +5,30 @@ from urllib.parse import quote, urlsplit, parse_qs
 from tokenio import utils
 from tokenio.exceptions import CallbackParametersError
 from tokenio.proto.security_pb2 import Signature
-
+from tokenio.proto.token_pb2 import TokenRequestPayload, TokenRequestOptions
+from tokenio.proto.gateway.gateway_pb2 import StoreTokenRequestRequest
 
 class TokenRequest:
-    def __init__(self, token_payload, options, user_ref_id, customization_id):
+    def __init__(self, token_payload: TokenRequestPayload, options, user_ref_id, customization_id):
         self.token_payload = token_payload
         self.options = options
         self.user_ref_id = user_ref_id  # TODO: default value?
         self.customization_id = customization_id  # ?
 
     @staticmethod
-    def builder(token_payload):
+    def builder(token_payload: TokenRequestPayload):
         return TokenRequestBuilder(token_payload)
 
 
 class TokenRequestBuilder:
-    def __init__(self, token_payload):
+    def __init__(self, token_payload: TokenRequestPayload):
         self.token_payload = token_payload
-        self.options = {}
+        self.options = None
         self.user_ref_id = None
         self.customization_id = None
 
-    def add_option(self, option, value):
-        self.options[option] = value
-        return self
-
-    def add_all_options(self, **options):
-        self.options.update(options)
+    def set_options(self, options: TokenRequestOptions):
+        self.options = options
         return self
 
     def set_user_ref_id(self, user_ref_id):
@@ -43,9 +40,11 @@ class TokenRequestBuilder:
         return self
 
     def build(self):
-        return TokenRequest(
-            self.token_payload, self.options, self.user_ref_id,
-            self.customization_id
+        return StoreTokenRequestRequest(
+            request_payload=self.token_payload,
+            request_options=self.options
+            user_ref_id=self.user_ref_id,
+            customization_id=self.customization_id
         )
 
 

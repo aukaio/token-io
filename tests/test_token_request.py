@@ -3,7 +3,7 @@ from grpc import StatusCode
 
 from tests import utils
 from tokenio.exceptions import RequestError
-from tokenio.proto.token_pb2 import TokenMember, AccessBody, TokenPayload
+from tokenio.proto.token_pb2 import TokenMember, AccessBody, TokenPayload, TokenRequestPayload
 from tokenio.token_request import TokenRequest
 
 
@@ -16,13 +16,13 @@ class TestTokenRequest:
 
     def test_add_and_get_transfer_token_request(self):
         member = self.client.create_member(utils.generate_alias())
-        payload = member.create_transfer_token(10, 'EUR').set_to_member_id(member.member_id).build()
-        stored_request = TokenRequest.builder(payload).add_all_options(redirectUrl=self.TOKEN_URL).build()
+        payload = member.create_transfer_token(10, 'EUR').set_to_member_id(member.member_id).set_redirect_url(self.TOKEN_URL).build()
+        stored_request = TokenRequest.builder(payload).build()
         request_id = member.store_token_request(stored_request)
         assert request_id
 
         retrieved_request = self.client.retrieve_token_request(request_id)
-        assert stored_request.token_payload == retrieved_request.payload
+        assert str(stored_request.payload) == str(retrieved_request.payload)
         assert request_id == retrieved_request.id
         for k, v in stored_request.options.items():
             assert v == retrieved_request.options.get(k)
@@ -30,15 +30,15 @@ class TestTokenRequest:
     def test_add_and_get_access_token_request(self):
         member = self.client.create_member(utils.generate_alias())
         to_member = TokenMember(id=member.member_id)
-        resource = AccessBody.Resource(all_addresses=AccessBody.Resource.AllAddresses())
-        access = AccessBody(resources=[resource])
-        payload = TokenPayload(to=to_member, access=access)
-        stored_request = TokenRequest.builder(payload).add_all_options(redirectUrl=self.TOKEN_URL).build()
+        #resource = AccessBody.Resource(all_addresses=AccessBody.Resource.AllAddresses())
+        access = TokenRequestPayload.AccessBody(type=[TokenRequestPayload.AccessBody.ACCOUNTS])
+        payload = TokenRequestPayload(to=to_member, access_body=access, redirect_url=self.TOKEN_URL)
+        stored_request = TokenRequest.builder(payload).build()
         request_id = member.store_token_request(stored_request)
         assert request_id
 
         retrieved_request = self.client.retrieve_token_request(request_id)
-        assert stored_request.token_payload == retrieved_request.payload
+        assert stored_request.payload == retrieved_request.payload
         assert request_id == retrieved_request.id
         for k, v in stored_request.options.items():
             assert v == retrieved_request.options.get(k)
