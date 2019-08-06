@@ -1,0 +1,255 @@
+syntax = "proto3";
+package io.token.proto.bankapi;
+option objc_class_prefix = "Fank";
+
+import "google/api/annotations.proto";
+import "alias.proto";
+import "member.proto";
+import "money.proto";
+import "banklink.proto";
+import "notification.proto";
+import "security.proto";
+import "token.proto";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Common data structures.
+//
+
+//
+// A bank client, such as John Doe. Client can have multiple accounts.
+//
+message Client {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+}
+
+message Account {
+  string name = 2;
+  string account_number = 4;
+  io.token.proto.common.money.Money balance = 5;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Requests/Responses for the API.
+//
+message AddClientRequest {
+  string bic = 1;
+  string first_name = 2;
+  string last_name = 3;
+}
+
+message AddClientResponse {
+  Client client = 1;
+}
+
+message GetClientRequest {
+  string bic = 1;
+  string client_id = 2;
+}
+
+message GetClientResponse {
+  Client client = 1;
+}
+
+message AddAccountRequest {
+  string bic = 1;
+  string client_id = 2;
+  string name = 3;
+  string account_number = 4;
+  io.token.proto.common.money.Money balance = 5;
+  string profile = 6;
+}
+
+message AddAccountResponse {
+  Account account = 1;
+}
+
+message GetAccountsRequest {
+  string bic = 1;
+  string client_id = 2;
+}
+
+message GetAccountsResponse {
+  repeated Account account = 1;
+}
+
+message GetAccountRequest {
+  string bic = 1;
+  string client_id = 2;
+  string account_number = 3;
+}
+
+message GetAccountResponse {
+  Account account = 1;
+}
+
+message AuthorizeLinkAccountsRequest {
+  string bic = 1;
+  string member_id = 2;
+  string client_id = 3;
+  repeated string accounts = 4;
+}
+
+message GetNotificationRequest {
+  string subscriber_id = 1;
+  string notification_id = 2;
+}
+
+message GetNotificationResponse {
+  io.token.proto.common.notification.Notification notification = 1;
+}
+
+message GetNotificationsRequest {
+  string subscriber_id = 1;
+}
+
+message GetNotificationsResponse {
+  repeated io.token.proto.common.notification.Notification notifications = 1;
+}
+
+message GetOauthAccessTokenRequest {
+  string bic = 1;
+  string profile = 2; // optional
+  string member_id = 3;
+  repeated Account accounts = 4;
+  string client_id = 5; // optional
+}
+
+message GetOauthAccessTokenResponse {
+  string access_token = 1;
+  int64 expires_in_ms = 2;
+}
+
+message VerifyAliasRequest {
+  string bic = 1;
+  string member_id = 2;
+  io.token.proto.common.alias.Alias alias = 3;
+}
+
+message VerifyAliasResponse {}
+
+message GetAuthRequestPayloadRequest {
+  string bic = 1;
+  string auth_request_id = 2;
+}
+
+message GetAuthRequestPayloadResponse {
+  io.token.proto.common.token.TokenPayload payload = 1;
+  string source_account_hash = 2;
+}
+
+message GetAuthRequestSignatureRequest {
+  string bic = 1;
+  string source_account_hash = 2;
+  string account_number = 3;
+}
+
+message GetAuthRequestSignatureResponse {
+  io.token.proto.common.security.Signature bank_signature = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Fank testing API, used to create accounts on the fly. Used for testing.
+//
+service FankService {
+  rpc AddClient (AddClientRequest) returns (AddClientResponse) {
+    option (google.api.http) = {
+        put: "/banks/{bic}/clients"
+        body: "*"
+    };
+  }
+
+  rpc GetClient (GetClientRequest) returns (GetClientResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bic}/clients/{client_id}"
+    };
+  }
+
+  rpc AddAccount (AddAccountRequest) returns (AddAccountResponse) {
+    option (google.api.http) = {
+        put: "/banks/{bic}/clients/{client_id}/accounts"
+        body: "*"
+    };
+  }
+
+  rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bic}/clients/{client_id}/accounts"
+    };
+  }
+
+  rpc GetAccount (GetAccountRequest) returns (GetAccountResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bic}/clients/{client_id}/accounts/{account_number}"
+    };
+  }
+
+  rpc AuthorizeLinkAccounts (AuthorizeLinkAccountsRequest)
+      returns (io.token.proto.banklink.BankAuthorization) {
+    option (google.api.http) = {
+        put: "/banks/{bic}/clients/{client_id}/link-accounts"
+        body: "*"
+    };
+  }
+
+  rpc AuthorizeLinkAccountsGet (AuthorizeLinkAccountsRequest)
+      returns (io.token.proto.banklink.BankAuthorization) {
+    option (google.api.http) = {
+        get: "/banks/{bic}/clients/{client_id}/link-accounts"
+    };
+  }
+
+  //
+  // Used by bank-demo to obtain access token.
+  //
+  rpc GetOauthAccessToken (GetOauthAccessTokenRequest) returns (GetOauthAccessTokenResponse) {
+    option (google.api.http) = {
+        put: "/banks/{bic}/token"
+        body: "*"
+    };
+  }
+
+  //
+  // Used by clients to make sure that notifications were routed and correctly delivered to
+  // the fank. This is mainly for testing the flow where a notification is sent through a bank
+  // instead of straight to devices.
+  //
+  rpc GetNotification (GetNotificationRequest) returns (GetNotificationResponse) {
+    option (google.api.http) = {
+        get: "/subscribers/{subscriber_id}/notifications/{notification_id}"
+    };
+  }
+
+  rpc GetNotifications (GetNotificationsRequest) returns (GetNotificationsResponse) {
+    option (google.api.http) = {
+        get: "/subscribers/{subscriber_id}/notifications"
+    };
+  }
+
+  //
+  // Used by sdk-java-tests to create members in the fank realms.
+  //
+
+  rpc VerifyAlias (VerifyAliasRequest) returns (VerifyAliasResponse) {
+    option (google.api.http) = {
+        post: "/verifyalias"
+        body: "*"
+    };
+  }
+
+  //
+  // Used to retrieve the token payload in direct guest checkout flow
+  //
+  rpc GetAuthRequestPayload (GetAuthRequestPayloadRequest) returns (GetAuthRequestPayloadResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bic}/auth-request-payloads/{auth_request_id}"
+    };
+  }
+
+  rpc GetAuthRequestSignature (GetAuthRequestSignatureRequest) returns (GetAuthRequestSignatureResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bic}/auth-request-signatures"
+    };
+  }
+}
