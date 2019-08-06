@@ -9,7 +9,7 @@ class GatewayServiceStub(object):
   Gateway Service.
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  Member registration, key and alias mamangement.
+  Member registration, key and alias management.
 
   """
 
@@ -94,11 +94,6 @@ class GatewayServiceStub(object):
         request_serializer=gateway_dot_gateway__pb2.DeleteMemberRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.DeleteMemberResponse.FromString,
         )
-    self.VerifyAliasOnBehalf = channel.unary_unary(
-        '/io.token.proto.gateway.GatewayService/VerifyAliasOnBehalf',
-        request_serializer=gateway_dot_gateway__pb2.VerifyAliasOnBehalfRequest.SerializeToString,
-        response_deserializer=gateway_dot_gateway__pb2.VerifyAliasOnBehalfResponse.FromString,
-        )
     self.NormalizeAlias = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/NormalizeAlias',
         request_serializer=gateway_dot_gateway__pb2.NormalizeAliasRequest.SerializeToString,
@@ -108,6 +103,11 @@ class GatewayServiceStub(object):
         '/io.token.proto.gateway.GatewayService/VerifyAffiliate',
         request_serializer=gateway_dot_gateway__pb2.VerifyAffiliateRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.VerifyAffiliateResponse.FromString,
+        )
+    self.SetAppCallbackUrl = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/SetAppCallbackUrl',
+        request_serializer=gateway_dot_gateway__pb2.SetAppCallbackUrlRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.SetAppCallbackUrlResponse.FromString,
         )
     self.BeginRecovery = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/BeginRecovery',
@@ -123,6 +123,11 @@ class GatewayServiceStub(object):
         '/io.token.proto.gateway.GatewayService/VerifyAlias',
         request_serializer=gateway_dot_gateway__pb2.VerifyAliasRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.VerifyAliasResponse.FromString,
+        )
+    self.VerifyEidas = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/VerifyEidas',
+        request_serializer=gateway_dot_gateway__pb2.VerifyEidasRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.VerifyEidasResponse.FromString,
         )
     self.GetDefaultAgent = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/GetDefaultAgent',
@@ -229,6 +234,11 @@ class GatewayServiceStub(object):
         request_serializer=gateway_dot_gateway__pb2.InvalidateNotificationRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.InvalidateNotificationResponse.FromString,
         )
+    self.UpdateNotificationStatus = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/UpdateNotificationStatus',
+        request_serializer=gateway_dot_gateway__pb2.UpdateNotificationStatusRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.UpdateNotificationStatusResponse.FromString,
+        )
     self.LinkAccounts = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/LinkAccounts',
         request_serializer=gateway_dot_gateway__pb2.LinkAccountsRequest.SerializeToString,
@@ -294,6 +304,11 @@ class GatewayServiceStub(object):
         request_serializer=gateway_dot_gateway__pb2.ResolveTransferDestinationsRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.ResolveTransferDestinationsResponse.FromString,
         )
+    self.ConfirmFunds = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/ConfirmFunds',
+        request_serializer=gateway_dot_gateway__pb2.ConfirmFundsRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.ConfirmFundsResponse.FromString,
+        )
     self.CreateTestBankAccount = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/CreateTestBankAccount',
         request_serializer=gateway_dot_gateway__pb2.CreateTestBankAccountRequest.SerializeToString,
@@ -338,6 +353,16 @@ class GatewayServiceStub(object):
         '/io.token.proto.gateway.GatewayService/UpdateTokenRequest',
         request_serializer=gateway_dot_gateway__pb2.UpdateTokenRequestRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.UpdateTokenRequestResponse.FromString,
+        )
+    self.PrepareToken = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/PrepareToken',
+        request_serializer=gateway_dot_gateway__pb2.PrepareTokenRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.PrepareTokenResponse.FromString,
+        )
+    self.CreateToken = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/CreateToken',
+        request_serializer=gateway_dot_gateway__pb2.CreateTokenRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.CreateTokenResponse.FromString,
         )
     self.CreateTransferToken = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/CreateTransferToken',
@@ -389,6 +414,11 @@ class GatewayServiceStub(object):
         request_serializer=gateway_dot_gateway__pb2.GetTokenRequestResultRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.GetTokenRequestResultResponse.FromString,
         )
+    self.GetAuthRequestPayload = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/GetAuthRequestPayload',
+        request_serializer=gateway_dot_gateway__pb2.GetAuthRequestPayloadRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.GetAuthRequestPayloadResponse.FromString,
+        )
     self.CreateTransfer = channel.unary_unary(
         '/io.token.proto.gateway.GatewayService/CreateTransfer',
         request_serializer=gateway_dot_gateway__pb2.CreateTransferRequest.SerializeToString,
@@ -434,6 +464,31 @@ class GatewayServiceStub(object):
         request_serializer=gateway_dot_gateway__pb2.GetKeychainsRequest.SerializeToString,
         response_deserializer=gateway_dot_gateway__pb2.GetKeychainsResponse.FromString,
         )
+    self.GetMemberInfo = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/GetMemberInfo',
+        request_serializer=gateway_dot_gateway__pb2.GetMemberInfoRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.GetMemberInfoResponse.FromString,
+        )
+    self.GetConsent = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/GetConsent',
+        request_serializer=gateway_dot_gateway__pb2.GetConsentRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.GetConsentResponse.FromString,
+        )
+    self.GetConsents = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/GetConsents',
+        request_serializer=gateway_dot_gateway__pb2.GetConsentsRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.GetConsentsResponse.FromString,
+        )
+    self.GetTppPerformanceReport = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/GetTppPerformanceReport',
+        request_serializer=gateway_dot_gateway__pb2.GetTppPerformanceReportRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.GetTppPerformanceReportResponse.FromString,
+        )
+    self.GetAvailabilityReport = channel.unary_unary(
+        '/io.token.proto.gateway.GatewayService/GetAvailabilityReport',
+        request_serializer=gateway_dot_gateway__pb2.GetAvailabilityReportRequest.SerializeToString,
+        response_deserializer=gateway_dot_gateway__pb2.GetAvailabilityReportResponse.FromString,
+        )
 
 
 class GatewayServiceServicer(object):
@@ -441,7 +496,7 @@ class GatewayServiceServicer(object):
   Gateway Service.
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  Member registration, key and alias mamangement.
+  Member registration, key and alias management.
 
   """
 
@@ -567,13 +622,6 @@ class GatewayServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def VerifyAliasOnBehalf(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
   def NormalizeAlias(self, request, context):
     # missing associated documentation comment in .proto file
     pass
@@ -582,6 +630,13 @@ class GatewayServiceServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def VerifyAffiliate(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def SetAppCallbackUrl(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -611,6 +666,13 @@ class GatewayServiceServicer(object):
 
   def VerifyAlias(self, request, context):
     """Verify an alias
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def VerifyEidas(self, request, context):
+    """Verify an eidas
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -788,6 +850,13 @@ class GatewayServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def UpdateNotificationStatus(self, request, context):
+    """update notification status
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def LinkAccounts(self, request, context):
     """//////////////////////////////////////////////////////////////////////////////////////////////////
     Bank accounts.
@@ -893,6 +962,13 @@ class GatewayServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def ConfirmFunds(self, request, context):
+    """Confirm that the given account has sufficient funds to cover the charge.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def CreateTestBankAccount(self, request, context):
     """//////////////////////////////////////////////////////////////////////////////////////////////////
     Testing.
@@ -963,7 +1039,7 @@ class GatewayServiceServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def RetrieveTokenRequest(self, request, context):
-    """Retrviee a Token Request
+    """Retrieve a Token Request
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -976,12 +1052,26 @@ class GatewayServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def CreateTransferToken(self, request, context):
+  def PrepareToken(self, request, context):
     """//////////////////////////////////////////////////////////////////////////////////////////////////
     Tokens.
 
 
-    Create a Transfer Token.
+    Prepare a token (resolve token payload and determine policy)
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CreateToken(self, request, context):
+    """Create a Token.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def CreateTransferToken(self, request, context):
+    """Create a Transfer Token.
     https://developer.token.io/sdk/#create-transfer-token
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -1060,6 +1150,13 @@ class GatewayServiceServicer(object):
 
   def GetTokenRequestResult(self, request, context):
     """Get the token request result from the token request id
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetAuthRequestPayload(self, request, context):
+    """Gets a payload to sign
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -1147,6 +1244,47 @@ class GatewayServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def GetMemberInfo(self, request, context):
+    """//////////////////////////////////////////////////////////////////////////////////////////////////
+    Bank member only requests.
+
+    Get member information about a member who links at least an account from this bank
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetConsent(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetConsents(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetTppPerformanceReport(self, request, context):
+    """//////////////////////////////////////////////////////////////////////////////////////////////////
+    Reports (bank member only requests).
+
+    Get TPP performance report.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetAvailabilityReport(self, request, context):
+    """Get availability report.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_GatewayServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -1225,11 +1363,6 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           request_deserializer=gateway_dot_gateway__pb2.DeleteMemberRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.DeleteMemberResponse.SerializeToString,
       ),
-      'VerifyAliasOnBehalf': grpc.unary_unary_rpc_method_handler(
-          servicer.VerifyAliasOnBehalf,
-          request_deserializer=gateway_dot_gateway__pb2.VerifyAliasOnBehalfRequest.FromString,
-          response_serializer=gateway_dot_gateway__pb2.VerifyAliasOnBehalfResponse.SerializeToString,
-      ),
       'NormalizeAlias': grpc.unary_unary_rpc_method_handler(
           servicer.NormalizeAlias,
           request_deserializer=gateway_dot_gateway__pb2.NormalizeAliasRequest.FromString,
@@ -1239,6 +1372,11 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           servicer.VerifyAffiliate,
           request_deserializer=gateway_dot_gateway__pb2.VerifyAffiliateRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.VerifyAffiliateResponse.SerializeToString,
+      ),
+      'SetAppCallbackUrl': grpc.unary_unary_rpc_method_handler(
+          servicer.SetAppCallbackUrl,
+          request_deserializer=gateway_dot_gateway__pb2.SetAppCallbackUrlRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.SetAppCallbackUrlResponse.SerializeToString,
       ),
       'BeginRecovery': grpc.unary_unary_rpc_method_handler(
           servicer.BeginRecovery,
@@ -1254,6 +1392,11 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           servicer.VerifyAlias,
           request_deserializer=gateway_dot_gateway__pb2.VerifyAliasRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.VerifyAliasResponse.SerializeToString,
+      ),
+      'VerifyEidas': grpc.unary_unary_rpc_method_handler(
+          servicer.VerifyEidas,
+          request_deserializer=gateway_dot_gateway__pb2.VerifyEidasRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.VerifyEidasResponse.SerializeToString,
       ),
       'GetDefaultAgent': grpc.unary_unary_rpc_method_handler(
           servicer.GetDefaultAgent,
@@ -1360,6 +1503,11 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           request_deserializer=gateway_dot_gateway__pb2.InvalidateNotificationRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.InvalidateNotificationResponse.SerializeToString,
       ),
+      'UpdateNotificationStatus': grpc.unary_unary_rpc_method_handler(
+          servicer.UpdateNotificationStatus,
+          request_deserializer=gateway_dot_gateway__pb2.UpdateNotificationStatusRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.UpdateNotificationStatusResponse.SerializeToString,
+      ),
       'LinkAccounts': grpc.unary_unary_rpc_method_handler(
           servicer.LinkAccounts,
           request_deserializer=gateway_dot_gateway__pb2.LinkAccountsRequest.FromString,
@@ -1425,6 +1573,11 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           request_deserializer=gateway_dot_gateway__pb2.ResolveTransferDestinationsRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.ResolveTransferDestinationsResponse.SerializeToString,
       ),
+      'ConfirmFunds': grpc.unary_unary_rpc_method_handler(
+          servicer.ConfirmFunds,
+          request_deserializer=gateway_dot_gateway__pb2.ConfirmFundsRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.ConfirmFundsResponse.SerializeToString,
+      ),
       'CreateTestBankAccount': grpc.unary_unary_rpc_method_handler(
           servicer.CreateTestBankAccount,
           request_deserializer=gateway_dot_gateway__pb2.CreateTestBankAccountRequest.FromString,
@@ -1469,6 +1622,16 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           servicer.UpdateTokenRequest,
           request_deserializer=gateway_dot_gateway__pb2.UpdateTokenRequestRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.UpdateTokenRequestResponse.SerializeToString,
+      ),
+      'PrepareToken': grpc.unary_unary_rpc_method_handler(
+          servicer.PrepareToken,
+          request_deserializer=gateway_dot_gateway__pb2.PrepareTokenRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.PrepareTokenResponse.SerializeToString,
+      ),
+      'CreateToken': grpc.unary_unary_rpc_method_handler(
+          servicer.CreateToken,
+          request_deserializer=gateway_dot_gateway__pb2.CreateTokenRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.CreateTokenResponse.SerializeToString,
       ),
       'CreateTransferToken': grpc.unary_unary_rpc_method_handler(
           servicer.CreateTransferToken,
@@ -1520,6 +1683,11 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           request_deserializer=gateway_dot_gateway__pb2.GetTokenRequestResultRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.GetTokenRequestResultResponse.SerializeToString,
       ),
+      'GetAuthRequestPayload': grpc.unary_unary_rpc_method_handler(
+          servicer.GetAuthRequestPayload,
+          request_deserializer=gateway_dot_gateway__pb2.GetAuthRequestPayloadRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.GetAuthRequestPayloadResponse.SerializeToString,
+      ),
       'CreateTransfer': grpc.unary_unary_rpc_method_handler(
           servicer.CreateTransfer,
           request_deserializer=gateway_dot_gateway__pb2.CreateTransferRequest.FromString,
@@ -1564,6 +1732,31 @@ def add_GatewayServiceServicer_to_server(servicer, server):
           servicer.GetKeychains,
           request_deserializer=gateway_dot_gateway__pb2.GetKeychainsRequest.FromString,
           response_serializer=gateway_dot_gateway__pb2.GetKeychainsResponse.SerializeToString,
+      ),
+      'GetMemberInfo': grpc.unary_unary_rpc_method_handler(
+          servicer.GetMemberInfo,
+          request_deserializer=gateway_dot_gateway__pb2.GetMemberInfoRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.GetMemberInfoResponse.SerializeToString,
+      ),
+      'GetConsent': grpc.unary_unary_rpc_method_handler(
+          servicer.GetConsent,
+          request_deserializer=gateway_dot_gateway__pb2.GetConsentRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.GetConsentResponse.SerializeToString,
+      ),
+      'GetConsents': grpc.unary_unary_rpc_method_handler(
+          servicer.GetConsents,
+          request_deserializer=gateway_dot_gateway__pb2.GetConsentsRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.GetConsentsResponse.SerializeToString,
+      ),
+      'GetTppPerformanceReport': grpc.unary_unary_rpc_method_handler(
+          servicer.GetTppPerformanceReport,
+          request_deserializer=gateway_dot_gateway__pb2.GetTppPerformanceReportRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.GetTppPerformanceReportResponse.SerializeToString,
+      ),
+      'GetAvailabilityReport': grpc.unary_unary_rpc_method_handler(
+          servicer.GetAvailabilityReport,
+          request_deserializer=gateway_dot_gateway__pb2.GetAvailabilityReportRequest.FromString,
+          response_serializer=gateway_dot_gateway__pb2.GetAvailabilityReportResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
