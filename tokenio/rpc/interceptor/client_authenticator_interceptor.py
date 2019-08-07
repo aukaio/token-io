@@ -51,7 +51,7 @@ class ClientAuthenticatorInterceptor(grpc.UnaryUnaryClientInterceptor):
             metadata.append(
                 (
                     'customer-initiated',
-                    AuthenticationContext.get_customer_initiated()
+                    str(AuthenticationContext.get_customer_initiated()).lower()
                 )
             )
             AuthenticationContext.clear_access_token()

@@ -42,7 +42,7 @@ class TokenRequestBuilder:
     def build(self):
         return StoreTokenRequestRequest(
             request_payload=self.token_payload,
-            request_options=self.options
+            request_options=self.options,
             user_ref_id=self.user_ref_id,
             customization_id=self.customization_id
         )
@@ -67,7 +67,7 @@ class TokenRequestState:
 
     def serialize(self):
         data = {'csrf_token_hash': self.csrf_token_hash, 'state': self.state}
-        return quote(utils.dict_to_bytes(data).decode())
+        return utils.dict_to_json(data)
 
     @classmethod
     def parse(cls, state_json):

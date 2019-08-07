@@ -125,7 +125,7 @@ class Member:
 
     def for_access_token(self, token_id, customer_initiated=True):
         # TODO: test
-        cloned = copy.deepcopy(self.client)
+        cloned = copy.copy(self.client)
         cloned.use_access_token(token_id, customer_initiated)
         return Member(cloned)
 
