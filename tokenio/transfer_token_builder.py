@@ -4,12 +4,13 @@ import typing
 import tokenio.member
 from tokenio import utils
 from tokenio.exceptions import IllegalArgumentException
+from tokenio.token_request import TokenRequest, TokenRequestState
 from tokenio.proto.account_pb2 import BankAccount
 from tokenio.proto.alias_pb2 import Alias
 from tokenio.proto.blob_pb2 import Blob
 from tokenio.proto.pricing_pb2 import Pricing
 from tokenio.proto.token_pb2 import TokenRequestPayload, TokenMember, ActingAs
-from tokenio.proto.transferinstructions_pb2 import TransferInstructions, TransferEndpoint
+from tokenio.proto.transferinstructions_pb2 import TransferInstructions, TransferEndpoint, TransferDestination
 TransferBody = TokenRequestPayload.TransferBody
 
 class TransferTokenBuilder:
@@ -20,6 +21,7 @@ class TransferTokenBuilder:
         self.member = member
         self.amount = amount
         self.currency = currency
+        self.request_state = TokenRequestState('', '')
 
         transfer_body = TransferBody(
             currency=currency,
@@ -34,17 +36,6 @@ class TransferTokenBuilder:
             transfer_body=transfer_body
         )
 
-        # transfer_body.instructions.CopyFrom(instructions)
-        # self.payload.transfer_body.CopyFrom(transfer_body)
-
-        # TODO: do we need to set `from`?
-        # alias = member.get_first_alias()
-        # from_token_member = TokenMember(id=member.member_id)
-        # if alias:
-        #     from_token_member.alias.CopyFrom(alias)
-        # payload_from = getattr(self.payload, 'from')
-        # payload_from.CopyFrom(from_token_member)
-
         self.blob_payloads = []
 
     def set_account_id(self, account_id: str) -> 'TransferTokenBuilder':
@@ -53,7 +44,7 @@ class TransferTokenBuilder:
         )
         source_account = BankAccount(token=token)
 
-        self.payload.transfer.instructions.source.account.CopyFrom(
+        self.payload.transfer_body.instructions.source.account.CopyFrom(
             source_account
         )
         return self
@@ -63,7 +54,7 @@ class TransferTokenBuilder:
     ) -> 'TransferTokenBuilder':
         custom = BankAccount.Custom(bank_id=bank_id, payload=authorization)
         source_account = BankAccount(custom=custom)
-        self.payload.transfer.instructions.source.account.CopyFrom(
+        self.payload.transfer_body.instructions.source.account.CopyFrom(
             source_account
         )
         return self
@@ -87,7 +78,7 @@ class TransferTokenBuilder:
     def set_change_amount(
         self, charge_amount: typing.Union[str, float]
     ) -> 'TransferTokenBuilder':
-        self.payload.transfer.amount = str(charge_amount)
+        self.payload.transfer_body.amount = str(charge_amount)
         return self
 
     def set_description(self, description: str) -> 'TransferTokenBuilder':
@@ -95,29 +86,29 @@ class TransferTokenBuilder:
         return self
 
     def set_source(self, source: TransferEndpoint) -> 'TransferTokenBuilder':
-        self.payload.transfer.instructions.source.CopyFrom(source)
+        self.payload.transfer_body.instructions.source.CopyFrom(source)
         return self
 
     def add_destination(
-        self, destination: TransferEndpoint
+        self, destination: TransferDestination
     ) -> 'TransferTokenBuilder':
-        self.payload.transfer.instructions.destinations.extend([destination])
+        self.payload.transfer_body.instructions.transfer_destinations.extend([destination])
         return self
 
-    def add_attachment(
-        self, attachment: TransferEndpoint
-    ) -> 'TransferTokenBuilder':
-        self.payload.transfer.attachments.extend([attachment])
-        return self
+    # def add_attachment(
+    #     self, attachment: Attachment
+    # ) -> 'TransferTokenBuilder':
+    #     self.payload.transfer_body.attachments.extend([attachment])
+    #     return self
 
-    def add_attachment_by_filename(
-        self, owner_id: str, file_type: str, file_name: str, data: bytes
-    ) -> 'TransferTokenBuilder':
-        payload = Blob.Payload(
-            owner_id=owner_id, type=file_type, name=file_name, data=data
-        )
-        self.blob_payloads.append(payload)
-        return self
+    # def add_attachment_by_filename(
+    #     self, owner_id: str, file_type: str, file_name: str, data: bytes
+    # ) -> 'TransferTokenBuilder':
+    #     payload = Blob.Payload(
+    #         owner_id=owner_id, type=file_type, name=file_name, data=data
+    #     )
+    #     self.blob_payloads.append(payload)
+    #     return self
 
     def set_to_alias(self, to_alias: Alias) -> 'TransferTokenBuilder':
         self.payload.to.alias.CopyFrom(to_alias)
@@ -138,13 +129,13 @@ class TransferTokenBuilder:
         return self
 
     def set_pricing(self, pricing: Pricing) -> 'TransferTokenBuilder':
-        self.payload.transfer.pricing.CopyFrom(pricing)
+        self.payload.transfer_body.pricing.CopyFrom(pricing)
         return self
 
     def set_purpose_of_payment(
         self, purpose_of_payment: int
     ) -> 'TransferTokenBuilder':
-        self.payload.transfer.instructions.metadata.transfer_purpose = purpose_of_payment
+        self.payload.transfer_body.instructions.metadata.transfer_purpose = purpose_of_payment
         return self
 
     def set_acting_as(self, acting_as: ActingAs) -> 'TransferTokenBuilder':
@@ -155,10 +146,19 @@ class TransferTokenBuilder:
         self.payload.redirect_url = redirect_url
         return self
 
+    def set_state(self, state):
+        self.request_state.state = state
+        return self
+
+    def set_csrf_token(self, token):
+        self.request_state.csrf_token_hash = utils.hash_string(token)
+        return self
+
     def build(self) -> TokenRequestPayload:
         to = self.payload.to
         if len(to.id) == 0 and to.alias.ByteSize() == 0:
             raise IllegalArgumentException('No payee on token request')
+        self.payload.callback_state = self.request_state.serialize()
         return self.payload
 
     def build_with_blob_attachments(self) -> TokenRequestPayload:
@@ -180,5 +180,5 @@ class TransferTokenBuilder:
             if attachment.ByteSize() != 0:
                 attachment_uploads.append(attachment)
 
-        self.payload.transfer.attachments.extend(attachment_uploads)
+        self.payload.transfer_body.attachments.extend(attachment_uploads)
         return self
