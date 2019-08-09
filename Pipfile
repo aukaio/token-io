@@ -8,6 +8,7 @@ protobuf = "*"
 grpcio = "*"
 ed25519 = "*"
 base58 = "*"
+google-api = "*"
 
 [dev-packages]
 grpcio-tools = "*"
@@ -18,4 +19,4 @@ yapf = "*"
 codecov = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"

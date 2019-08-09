@@ -13,7 +13,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from tokenio.proto.google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
+from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
 import tokenio.proto.account_pb2 as account__pb2
 import tokenio.proto.address_pb2 as address__pb2
 import tokenio.proto.bankinfo_pb2 as bankinfo__pb2
