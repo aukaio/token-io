@@ -30,7 +30,7 @@ class Account:
         return self.account.bank_id
 
     def balance(self, key_level):
-        return self.client.get_balances(self.account.id, key_level)
+        return self.client.get_balance(self.account.id, key_level)
 
     def current_balance(self, key_level):
         return self.balance(key_level).current

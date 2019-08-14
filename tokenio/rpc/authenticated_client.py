@@ -5,6 +5,7 @@ from tokenio.proto.member_pb2 import MemberUpdate, RecoveryRule, MemberRecoveryR
     TrustedBeneficiary
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenRequestStatePayload, TokenMember, TokenPayload
+from tokenio.proto.gateway.gateway_pb2 import StoreTokenRequestRequest
 from tokenio.rpc.authentication_context import AuthenticationContext
 from tokenio.security.engines import CryptoEngine
 
@@ -152,15 +153,7 @@ class AuthenticatedClient:
         self.on_behalf_of = None
         self.customer_initiated = False
 
-    def store_token_request(
-        self, payload, options, user_ref_id='', customization_id=''
-    ):
-        request = StoreTokenRequestRequest(
-            payload=payload,
-            options=options,
-            user_ref_id=user_ref_id,
-            customization_id=customization_id
-        )
+    def store_token_request(self, request: StoreTokenRequestRequest):
         with self._channel as channel:
             response = channel.stub.StoreTokenRequest(request)
         return response.token_request.id
@@ -424,10 +417,11 @@ class AuthenticatedClient:
 
     def create_access_token(self, token_payload: TokenPayload):
         token_member = TokenMember(id=self.member_id)
-        payload_from = getattr(
-            token_payload, 'from'
-        )  # `from` is a reserved keyword
-        payload_from.CopyFrom(token_member)
+        # TODO: do we need to set `from`?
+        # payload_from = getattr(
+        #     token_payload, 'from'
+        # )  # `from` is a reserved keyword
+        # payload_from.CopyFrom(token_member)
 
         request = CreateAccessTokenRequest(payload=token_payload)
         with self._channel as channel:

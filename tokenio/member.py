@@ -14,6 +14,7 @@ from tokenio.proto.member_pb2 import MemberAliasOperation, MemberOperation, Memb
 from tokenio.proto.money_pb2 import Money
 from tokenio.proto.security_pb2 import Key
 from tokenio.proto.token_pb2 import TokenRequest, Token, TokenPayload
+from tokenio.proto.gateway.gateway_pb2 import StoreTokenRequestRequest
 from tokenio.proto.transfer_pb2 import TransferPayload
 from tokenio.proto.transferinstructions_pb2 import TransferEndpoint
 from tokenio.rpc.authenticated_client import AuthenticatedClient
@@ -124,15 +125,12 @@ class Member:
 
     def for_access_token(self, token_id, customer_initiated=True):
         # TODO: test
-        cloned = copy.deepcopy(self.client)
+        cloned = copy.copy(self.client)
         cloned.use_access_token(token_id, customer_initiated)
         return Member(cloned)
 
-    def store_token_request(self, token_request: TokenRequest):
-        return self.client.store_token_request(
-            token_request.token_payload, token_request.options,
-            token_request.user_ref_id, token_request.customization_id
-        )
+    def store_token_request(self, token_request: StoreTokenRequestRequest):
+        return self.client.store_token_request(token_request)
 
     def get_transfer(self, transfer_id: str):
         return self.client.get_transfer(transfer_id)

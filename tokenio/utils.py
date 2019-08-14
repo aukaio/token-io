@@ -39,9 +39,12 @@ def hash_proto_message(message):
 
 
 def dict_to_bytes(data):
+    return dict_to_json(data).encode()
+
+def dict_to_json(data):
     return json.dumps(
         data, ensure_ascii=False, separators=(',', ':'), sort_keys=True
-    ).encode()
+    )
 
 
 def normalize_alias(alias: Alias) -> Alias:

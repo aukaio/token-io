@@ -1,0 +1,1902 @@
+syntax = "proto3";
+package io.token.proto.gateway;
+option csharp_namespace = "Tokenio.Proto.Gateway";
+
+import "google/api/annotations.proto";
+
+import "account.proto";
+import "address.proto";
+import "bankinfo.proto";
+import "banklink.proto";
+import "blob.proto";
+import "consent.proto";
+import "eidas.proto";
+import "alias.proto";
+import "member.proto";
+import "money.proto";
+import "notification.proto";
+import "security.proto";
+import "subscriber.proto";
+import "token.proto";
+import "transaction.proto";
+import "transfer.proto";
+import "transferinstructions.proto";
+import "extensions/field.proto";
+import "extensions/service.proto";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Paging details.
+//
+message Page {
+  string offset = 1;      // Opaque base-64 encoded offset for the client to roundtrip.
+  int32 limit = 2;        // Max number of records to return.
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Member registration, key and alias management.
+//
+
+message CreateMemberRequest {
+  string nonce = 1; // random string; used only to de-duplicate requests.
+  io.token.proto.common.member.CreateMemberType member_type = 2;
+  string token_request_id = 3; // Optional token request ID, if set the member will be claimed by the TPP initiating the token request.
+  string partner_id = 4;
+  string realm_id = 5;
+}
+
+message CreateMemberResponse {
+  string member_id = 1; // newly-created member ID.
+}
+
+message UpdateMemberRequest {
+  io.token.proto.common.member.MemberUpdate update = 1;                       // changes
+  io.token.proto.common.security.Signature update_signature = 2;              // signature of update field
+  repeated io.token.proto.common.member.MemberOperationMetadata metadata = 3; // extra (unsigned) data for aliases
+}
+
+message UpdateMemberResponse {
+  io.token.proto.common.member.Member member = 1; // updated member structure
+}
+
+message GetMemberRequest {
+  string member_id = 1; // ID of member to get
+}
+
+message GetMemberResponse {
+  io.token.proto.common.member.Member member = 1; // member structure
+}
+
+message ResolveAliasRequest {
+  io.token.proto.common.alias.Alias alias = 1; // alias to resolve
+
+  // for backwards compatibility with older JS clients TODO(RD-2738) remove
+  io.token.proto.common.alias.Alias.Type type = 2 [deprecated = true];                    // For example, EMAIL.
+  string value = 3 [(io.token.proto.extensions.field.redact) = true, deprecated = true]; // For example, "sandy@example.com"
+  string realm  = 4 [deprecated = true];                              // For example, "token"
+}
+
+message ResolveAliasResponse {
+  io.token.proto.common.token.TokenMember member = 1; // member that owns alias, if any
+}
+
+message GetAliasesRequest {}
+
+message GetAliasesResponse {
+  repeated io.token.proto.common.alias.Alias aliases = 1;            // verified aliases
+  repeated io.token.proto.common.alias.Alias unverified_aliases = 2; // unverified aliases
+}
+
+message CompleteVerificationRequest {
+  string verification_id = 1; // verification ID
+  string code = 2;            // verification code
+}
+
+message CompleteVerificationResponse {
+  io.token.proto.common.alias.VerificationStatus status = 1;
+}
+
+message RetryVerificationRequest {
+  string member_id = 1;                        // member ID
+  io.token.proto.common.alias.Alias alias = 2; // alias
+}
+
+message RetryVerificationResponse {
+  string verification_id = 1; // verification ID
+}
+
+message GetPairedDevicesRequest {}
+
+message GetPairedDevicesResponse {
+  repeated io.token.proto.common.member.Device devices = 1; // linked device info
+}
+
+message DeleteMemberRequest {}
+
+message DeleteMemberResponse {}
+
+message NormalizeAliasRequest {
+  io.token.proto.common.alias.Alias alias = 1;
+}
+
+message NormalizeAliasResponse {
+  io.token.proto.common.alias.Alias alias = 1;
+}
+
+message VerifyAffiliateRequest {
+  string member_id = 1; // ID of affiliated TPP member to verify
+}
+
+message VerifyAffiliateResponse {}
+
+message SetAppCallbackUrlRequest {
+  string app_callback_url = 1; // the custom app call back url
+}
+
+message SetAppCallbackUrlResponse {}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Member account recovery.
+//
+
+message BeginRecoveryRequest {
+  io.token.proto.common.alias.Alias alias = 1; // alias of member to recover
+}
+
+message BeginRecoveryResponse {
+  string verification_id = 1; // id to use in later recovery steps
+}
+
+message CompleteRecoveryRequest {
+  string verification_id = 1;                 // verification id
+  string code = 2;                            // verification code (perhaps sent to alias email)
+  io.token.proto.common.security.Key key = 3; // new privileged key to use
+}
+
+message CompleteRecoveryResponse {
+  io.token.proto.common.member.MemberRecoveryOperation recovery_entry = 1;
+  io.token.proto.common.alias.VerificationStatus status = 2;
+}
+
+message VerifyAliasRequest {
+  string verification_id = 1; // verification id
+  string code = 2;            // verification code (perhaps sent to alias email)
+}
+
+message VerifyAliasResponse {}
+
+message VerifyEidasRequest {
+  io.token.proto.common.eidas.VerifyEidasPayload payload = 1; // payload with certificate
+  string signature = 2; // signature of payload signed with the private key of the certificate
+}
+
+message VerifyEidasResponse {}
+
+message GetDefaultAgentRequest {}
+
+message GetDefaultAgentResponse {
+  string member_id = 1; // ID of the "normal consumer mode" recovery agent
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Member PII/addresses/preferences management.
+//
+
+message AddAddressRequest {
+  string name = 1;                                                // display name, such as "Office"
+  io.token.proto.common.address.Address address = 2;              // shipping address
+  io.token.proto.common.security.Signature address_signature = 3; // signature
+}
+
+message AddAddressResponse {
+  io.token.proto.common.member.AddressRecord address = 1; // new address
+}
+
+message GetAddressRequest {
+  string address_id = 1; // address ID
+}
+
+message GetAddressResponse {
+  io.token.proto.common.member.AddressRecord address = 1; // address
+}
+
+message GetAddressesRequest {}
+
+message GetAddressesResponse {
+  repeated io.token.proto.common.member.AddressRecord addresses = 1; // list of addresses
+}
+
+message DeleteAddressRequest {
+  string address_id = 1; // address ID
+}
+
+message DeleteAddressResponse {}
+
+message SetProfileRequest {
+  io.token.proto.common.member.Profile profile = 1; // new profile, picture fields ignored
+}
+
+message SetProfileResponse {
+  io.token.proto.common.member.Profile profile = 1; // updated profile
+}
+
+message GetProfileRequest {
+  string member_id = 1; // member ID
+}
+
+message GetProfileResponse {
+  io.token.proto.common.member.Profile profile = 1; // display information
+}
+
+message SetProfilePictureRequest {
+  io.token.proto.common.blob.Blob.Payload payload = 1; // image "file"
+}
+
+message SetProfilePictureResponse {
+}
+
+message GetProfilePictureRequest {
+  string member_id = 1;                                     // member ID
+  io.token.proto.common.member.ProfilePictureSize size = 2; // ORIGINAL/SMALL/MEDIUM/LARGE
+}
+
+message GetProfilePictureResponse {
+  io.token.proto.common.blob.Blob blob = 1; // blob with image "file"
+}
+
+message SetReceiptContactRequest {
+  string member_id = 1;
+  io.token.proto.common.member.ReceiptContact contact = 2;
+}
+
+message SetReceiptContactResponse {
+}
+
+message GetReceiptContactRequest {
+  string member_id = 1;
+}
+
+message GetReceiptContactResponse {
+  io.token.proto.common.member.ReceiptContact contact = 1;
+}
+
+message AddTrustedBeneficiaryRequest {
+  io.token.proto.common.member.TrustedBeneficiary trusted_beneficiary = 1;
+}
+
+message AddTrustedBeneficiaryResponse {
+}
+
+message RemoveTrustedBeneficiaryRequest {
+  io.token.proto.common.member.TrustedBeneficiary trusted_beneficiary = 1;
+}
+
+message RemoveTrustedBeneficiaryResponse {
+}
+
+message GetTrustedBeneficiariesRequest {
+}
+
+message GetTrustedBeneficiariesResponse {
+  repeated io.token.proto.common.member.TrustedBeneficiary trusted_beneficiaries = 1;
+}
+
+message CreateCustomizationRequest {
+  io.token.proto.common.blob.Blob.Payload logo = 1;
+  map<string, string> colors = 2;
+  string consent_text = 3;
+  string name = 4;
+  string app_name = 5;
+}
+
+message CreateCustomizationResponse {
+  string customization_id = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Notification service
+//
+
+message SubscribeToNotificationsRequest {
+  string handler = 1;                           // Who is sending the notification
+  map<string, string> handler_instructions = 2; // Available to handler when sending notifications
+}
+
+message SubscribeToNotificationsResponse {
+  io.token.proto.common.subscriber.Subscriber subscriber = 1; // Represents one subscription
+}
+
+message GetSubscribersRequest {}
+
+message GetSubscribersResponse {
+  repeated io.token.proto.common.subscriber.Subscriber subscribers = 1; // notification subscriber info
+}
+
+message GetSubscriberRequest {
+  string subscriber_id = 1; // ID of notification subscriber to get
+}
+
+message GetSubscriberResponse {
+  io.token.proto.common.subscriber.Subscriber subscriber = 1; // notification subscriber info
+}
+
+message UnsubscribeFromNotificationsRequest {
+  string subscriber_id = 1; // ID of notification subscriber to unsubscribe
+}
+
+message UnsubscribeFromNotificationsResponse {}
+
+message NotifyRequest {
+  io.token.proto.common.alias.Alias alias = 1; // alias of member to notify
+  io.token.proto.common.notification.NotifyBody body = 2; // notification details
+  string realm = 3; // Deprecated
+}
+
+message NotifyResponse {
+  io.token.proto.common.notification.NotifyStatus status = 1; // was notification accepted?
+}
+
+message GetNotificationsRequest {
+  Page page = 1; // offset and limit
+
+  // for backwards compatibility with older JS clients TODO(RD-2738) remove
+  string offset = 2 [deprecated = true];
+  int32 limit = 3 [deprecated = true];
+}
+
+message GetNotificationsResponse {
+  repeated io.token.proto.common.notification.Notification notifications = 1; // notification details
+  string offset = 2; // offset string to get "next page"
+}
+
+message GetNotificationRequest {
+  string notification_id = 1; // ID of notification to get
+}
+
+message GetNotificationResponse {
+  io.token.proto.common.notification.Notification notification = 1; // notification details
+}
+
+message RequestTransferRequest {
+  io.token.proto.common.token.TokenPayload token_payload = 2; // transfer token payload with some values filled in
+}
+
+message RequestTransferResponse {
+  io.token.proto.common.notification.NotifyStatus status = 1; // was notification accepted?
+}
+
+message TriggerStepUpNotificationRequest {
+  oneof step_up_type {
+    io.token.proto.common.notification.StepUp token_step_up = 1;                  // ask user to endorse token
+    io.token.proto.common.notification.BalanceStepUp balance_step_up = 2;         // ask user to approve get-balance
+    io.token.proto.common.notification.TransactionStepUp transaction_step_up = 3; // ask user to approve get-transactions
+  }
+}
+
+message TriggerStepUpNotificationResponse {
+  io.token.proto.common.notification.NotifyStatus status = 1; // was notification accepted?
+}
+
+message TriggerCreateAndEndorseTokenNotificationRequest {
+  string token_request_id = 1;
+  io.token.proto.common.notification.AddKey add_key = 2;      // Optional key to add
+  io.token.proto.common.member.ReceiptContact contact = 3;    // Optional receipt contact
+}
+
+message TriggerCreateAndEndorseTokenNotificationResponse {
+  io.token.proto.common.notification.NotifyStatus status = 1; // was notification accepted?
+  string notification_id = 2;
+}
+
+message TriggerEndorseAndAddKeyNotificationRequest {
+  option deprecated = true;         // Use CreateAndEndorseToken instead
+  io.token.proto.common.notification.EndorseAndAddKey endorse_and_add_key = 1;
+}
+
+message TriggerEndorseAndAddKeyNotificationResponse {
+  option deprecated = true;         // Use CreateAndEndorseToken instead
+  io.token.proto.common.notification.NotifyStatus status = 1; // was notification accepted?
+  string notification_id = 2;
+}
+
+message InvalidateNotificationRequest {
+  string notification_id = 1;
+}
+
+message InvalidateNotificationResponse {
+  io.token.proto.common.notification.NotifyStatus status = 1; // was notification accepted?
+}
+
+message UpdateNotificationStatusRequest {
+  string notification_id = 1;
+  io.token.proto.common.notification.Notification.Status status = 2;
+}
+
+message UpdateNotificationStatusResponse {}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Bank account management and information access.
+//
+
+message LinkAccountsRequest {
+  // authorization, normally from bank web site
+  io.token.proto.banklink.BankAuthorization bankAuthorization = 1;
+}
+
+message LinkAccountsResponse {
+  // basic info about newly-linked accounts
+  repeated io.token.proto.common.account.Account accounts = 1;
+}
+
+message LinkAccountsOauthRequest {
+  // OAuth access token, normally from a bank website
+  io.token.proto.banklink.OauthBankAuthorization authorization = 1;
+}
+
+message LinkAccountsOauthResponse {
+  // basic info about newly-linked accounts
+  repeated io.token.proto.common.account.Account accounts = 1;
+  io.token.proto.banklink.AccountLinkingStatus status = 2;
+}
+
+message UnlinkAccountsRequest {
+  repeated string account_ids = 1; // IDs of accounts to unlink
+}
+
+message UnlinkAccountsResponse {
+}
+
+message GetAccountRequest {
+  string account_id = 1; // ID of account to get information about
+}
+
+message GetAccountResponse {
+  io.token.proto.common.account.Account account = 1; // basic account information
+}
+
+message GetAccountsRequest {
+}
+
+message GetAccountsResponse {
+  repeated io.token.proto.common.account.Account accounts = 1; // basic account information
+}
+
+message GetBalanceRequest {
+  string account_id = 1;
+}
+
+message GetBalanceResponse {
+  io.token.proto.common.transaction.Balance balance = 1;
+  io.token.proto.common.transaction.RequestStatus status = 2;
+}
+
+message GetBalancesRequest {
+  repeated string account_id = 1;
+}
+
+message GetBalancesResponse {
+  repeated GetBalanceResponse response = 1;
+}
+
+message GetTransactionRequest {
+  string account_id = 1;
+  string transaction_id = 2;
+}
+
+message GetTransactionResponse {
+  io.token.proto.common.transaction.Transaction transaction = 1;
+  io.token.proto.common.transaction.RequestStatus status = 2;
+}
+
+message GetTransactionsRequest {
+  string account_id = 1;
+  Page page = 2; // Optional paging settings.
+
+  // for backwards compatibility with older JS clients TODO(RD-2738) remove
+  string offset = 3;
+  int32 limit = 4;
+}
+
+message GetTransactionsResponse {
+  repeated io.token.proto.common.transaction.Transaction transactions = 1; // transaction details
+  string offset = 2; // Optional offset state for the client to roundtrip.
+  io.token.proto.common.transaction.RequestStatus status = 3;
+}
+
+message ApplyScaRequest {
+  repeated string account_id = 1;
+}
+
+message ApplyScaResponse {}
+
+message GetDefaultAccountRequest {
+  string member_id = 1; // ID of member; must be same as auth'd member
+}
+
+message GetDefaultAccountResponse {
+  io.token.proto.common.account.Account account = 1; // default account, if any
+}
+
+message SetDefaultAccountRequest {
+  string member_id = 1;  // ID of member; must be same as auth'd member
+  string account_id = 2; // ID of account to set as default
+}
+
+message SetDefaultAccountResponse {
+}
+
+message ResolveTransferDestinationsRequest {
+  string account_id = 1;
+}
+
+message ResolveTransferDestinationsResponse {
+  repeated io.token.proto.common.transferinstructions.TransferEndpoint destinations = 1 [deprecated=true];
+  repeated io.token.proto.common.transferinstructions.TransferDestination transfer_destinations = 2;
+}
+
+message ConfirmFundsRequest {
+  string account_id = 1;
+  io.token.proto.common.money.Money amount = 2;
+}
+
+message ConfirmFundsResponse {
+  bool funds_available = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Blobs
+//
+
+message CreateBlobRequest {
+  io.token.proto.common.blob.Blob.Payload payload = 1; // "file" information
+}
+
+message CreateBlobResponse {
+  string blob_id = 1; // ID of new blob
+}
+
+message GetBlobRequest {
+  string blob_id = 1; // ID of blob to fetch
+}
+
+message GetBlobResponse {
+  io.token.proto.common.blob.Blob blob = 1; // "file" information
+}
+
+message GetTokenBlobRequest {
+  string token_id = 1; // ID of token to use for "permission"
+  string blob_id = 2;  // ID of blob to fetch
+}
+
+message GetTokenBlobResponse {
+  io.token.proto.common.blob.Blob blob = 1; // "file" information
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Token Requests
+//
+
+message StoreTokenRequestRequest {
+  // deprecated fields
+  io.token.proto.common.token.TokenPayload payload = 1 [deprecated = true];
+  map<string, string> options = 2  [(io.token.proto.extensions.field.redact) = true, deprecated = true];
+  string user_ref_id = 3 [deprecated = true];
+  string customization_id = 4 [deprecated = true];
+
+  io.token.proto.common.token.TokenRequestPayload request_payload = 5;
+  io.token.proto.common.token.TokenRequestOptions request_options = 6;
+}
+
+message StoreTokenRequestResponse {
+  io.token.proto.common.token.TokenRequest token_request = 1;
+}
+
+message RetrieveTokenRequestRequest {
+  string request_id = 1;
+}
+
+message RetrieveTokenRequestResponse {
+  io.token.proto.common.token.TokenRequest token_request = 1;
+  io.token.proto.common.member.Customization customization = 2;
+  bool hide_consent = 3;
+}
+
+message UpdateTokenRequestRequest {
+  string request_id = 1;
+  io.token.proto.common.token.TokenRequestOptions request_options = 2;
+}
+
+message UpdateTokenRequestResponse {
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Tokens
+//
+
+message PrepareTokenRequest {
+  io.token.proto.common.token.TokenPayload payload = 1;
+}
+
+message PrepareTokenResponse {
+  io.token.proto.common.token.TokenPayload resolved_payload = 1;
+  io.token.proto.common.token.Policy policy = 2;
+}
+
+message CreateTokenRequest {
+  io.token.proto.common.token.TokenPayload payload = 1;
+  repeated io.token.proto.common.security.Signature signatures = 2;
+  string token_request_id = 3; // optional ID of the token request
+
+  // Only useful for HTTP requests
+  // specifying type=access in an HTTP request will call CreateAccessToken instead of this endpoint
+  // specifying type=transfer in an HTTP request will call CreateTransferToken instead of this endpoint
+  // TODO(RD-2738) remove this
+  string type = 4 [deprecated = true];
+}
+
+message CreateTokenResponse {
+  io.token.proto.common.token.Token token = 1;
+
+  // deprecated: used as HTTP response for CreateTransferToken TODO(RD-2738) remove
+  io.token.proto.common.token.TransferTokenStatus status = 2 [deprecated = true];
+  io.token.proto.common.token.ExternalAuthorizationDetails authorization_details = 3 [deprecated = true];
+}
+
+message CreateTransferTokenRequest {
+  option deprecated = true; // use CreateTokenRequest instead
+  io.token.proto.common.token.TokenPayload payload = 1; // TokenPayload, should have TransferBody
+  string token_request_id = 2; // ID of the token request
+}
+
+message CreateTransferTokenResponse {
+  io.token.proto.common.token.Token token = 1;                                        // new Token
+  io.token.proto.common.token.TransferTokenStatus status = 2;                         // success/failure
+  io.token.proto.common.token.ExternalAuthorizationDetails authorization_details = 3; // Optional: used when status is FAILURE_EXTERNAL_AUTHORIZATION_REQUIRED
+}
+
+message CreateAccessTokenRequest {
+  io.token.proto.common.token.TokenPayload payload = 1; // TokenPayload, should have AccessBody
+  string token_request_id = 2; // ID of the token request
+}
+
+message CreateAccessTokenResponse {
+  io.token.proto.common.token.Token token = 1; // new Token
+}
+
+message GetTokenRequest {
+  string token_id = 1; // ID of Token to fetch
+}
+
+message GetTokenResponse {
+  io.token.proto.common.token.Token token = 1; // Token
+}
+
+message GetActiveAccessTokenRequest {
+  string to_member_id = 1; // Member ID of the recipient
+}
+
+message GetActiveAccessTokenResponse {
+  io.token.proto.common.token.Token token = 1;
+}
+
+message GetTokensRequest {
+  Type type = 1;          // ACCESS or TRANSFER
+  Page page = 2;          // Optional paging settings.
+  TokenFilter filter = 3; // optional filter
+
+  enum Type {
+    INVALID = 0;
+    ACCESS = 1;
+    TRANSFER = 2;
+  }
+
+  message TokenFilter {
+    string source_account_id = 1;      // Transfer Token source account
+    string destination_account_id = 2; // Transfer Token destination account
+    int64 start_time_ms = 3;           // start time
+    int64 end_time_ms = 4;             // end time
+    Role role = 5;                     // FROM/TO
+    string acting_as_ref_id = 6;       // Optional ref_id of TokenPayload.acting_as
+
+    enum Role {
+      ANY = 0;
+      FROM = 1;
+      TO = 2;
+      ISSUER = 3;
+    }
+  }
+
+  // for backwards compatibility with older JS clients TODO(RD-2738) remove
+  string offset = 4;
+  int32 limit = 5;
+}
+
+message GetTokensResponse {
+  repeated io.token.proto.common.token.Token tokens = 1; // list of Tokens
+  string offset = 2;                                     // optional offset state for the client to roundtrip.
+}
+
+message EndorseTokenRequest {
+  string token_id = 1;                                    // The id of token to endorse
+  io.token.proto.common.security.Signature signature = 2; // Signature
+}
+
+message EndorseTokenResponse {
+  io.token.proto.common.token.TokenOperationResult result = 1; // Success/fail and new token data
+}
+
+message CancelTokenRequest {
+  string token_id = 1;                                    // The id of token to cancel
+  io.token.proto.common.security.Signature signature = 2; // Signature
+}
+
+message CancelTokenResponse {
+  io.token.proto.common.token.TokenOperationResult result = 1; // Success/fail and new token data
+}
+
+message ReplaceTokenRequest {
+  message CancelToken {
+    string token_id = 1;                                    // The id of token to replace
+    io.token.proto.common.security.Signature signature = 2; // Signature canceling old token
+  }
+
+  message CreateToken {
+    io.token.proto.common.token.TokenPayload payload = 1;           // New token payload
+    io.token.proto.common.security.Signature payload_signature = 2; // Optional if endorsement requested.
+    string token_request_id = 3;                                    // Optional token request ID
+  }
+
+  CancelToken cancel_token = 1;
+  CreateToken create_token = 2;
+}
+
+message ReplaceTokenResponse {
+  io.token.proto.common.token.TokenOperationResult result = 1; // Success/fail and new token data
+}
+
+message SignTokenRequestStateRequest {
+  io.token.proto.common.token.TokenRequestStatePayload payload = 1;
+  string token_request_id = 2;
+}
+
+message SignTokenRequestStateResponse {
+  io.token.proto.common.security.Signature signature = 1;
+}
+
+message GetTokenRequestResultRequest {
+  string token_request_id = 1;
+}
+
+message GetTokenRequestResultResponse {
+  string token_id = 1;
+  io.token.proto.common.security.Signature signature = 2;
+}
+
+message GetAuthRequestPayloadRequest {
+  string auth_request_id = 1;
+}
+
+message GetAuthRequestPayloadResponse {
+  io.token.proto.common.token.TokenPayload payload = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Transfers.
+//
+
+message CreateTransferRequest {
+  io.token.proto.common.transfer.TransferPayload payload = 1;     // Desired transfer spec
+  io.token.proto.common.security.Signature payload_signature = 2; // Signature
+}
+
+message CreateTransferResponse {
+  io.token.proto.common.transfer.Transfer transfer = 1; // Resulting transfer spec
+  io.token.proto.common.token.ExternalAuthorizationDetails authorization_details = 2; // Optional: used when transfer status is PENDING_EXTERNAL_AUTHORIZATION
+}
+
+message GetTransferRequest {
+  string transfer_id = 1; // transfer to get
+}
+
+message GetTransferResponse {
+  io.token.proto.common.transfer.Transfer transfer = 1; // Transfer spec
+}
+
+message GetTransfersRequest {
+  string token_id = 1;       // Deprecated, use filter.token_id instead
+  Page page = 2;             // Optional paging settings
+  TransferFilter filter = 3; // Filter to restrict query
+
+  message TransferFilter {
+    string token_id = 1;                                                        // Optional token ID
+    int64 start_time_ms = 2;                                                    // Optional time range
+    int64 end_time_ms = 3;                                                      // Optional time range
+    io.token.proto.common.transaction.TransactionStatus transaction_status = 4; // Optional status
+    Role role = 5;                                                              // Role. Default: ANY
+    string acting_as_ref_id = 6;                                                // Optional ref_id of TokenPayload.acting_as
+
+    enum Role {
+      ANY = 0;
+      PAYER = 1;
+      PAYEE = 2;
+    }
+  }
+
+  // for backwards compatibility with older JS clients TODO(RD-2738) remove
+  string offset = 4 [deprecated = true];
+  int32 limit = 5 [deprecated = true];
+}
+
+message GetTransfersResponse {
+  repeated io.token.proto.common.transfer.Transfer transfers = 1; // List of transfers.
+  string offset = 2;                                              // Optional offset state for the client to roundtrip.
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Bank Information Endpoints.
+//
+
+message GetBanksCountriesRequest {
+  io.token.proto.common.bank.BankFilter filter = 1;     // (Optional) Filter by criteria in bank filter. Results must match all filter criteria.
+
+  // for backwards compatibility with older JS clients TODO(RD-2738) remove
+  repeated string ids = 2 [deprecated = true];
+  string search = 3 [deprecated = true];
+  string country = 4 [deprecated = true];
+  string provider = 5 [deprecated = true];
+  string destination_country = 6 [deprecated = true];
+  string tpp_id = 7 [deprecated = true];
+}
+
+message GetBanksCountriesResponse {
+  repeated string countries = 1;
+}
+
+message GetBanksRequest {
+  io.token.proto.common.bank.BankFilter filter = 9;     // (Optional) Filter by criteria in bank filter. Results must match all filter criteria.
+
+  // Paging
+  int32 page = 4;                     // Result page to retrieve. Defaults to 1 if not specified
+  int32 per_page = 5;                 // Maximum number of records per page. Can be at most 200. Defaults to 200 if not specified.
+  string sort = 6;                    // The key to sort the results. Could be one of: name, provider and country. Defaults to name if not specified.
+
+  // DEPRECATED
+  string country = 3 [deprecated = true];          // DEPRECATED. If specified, return banks whose 'country' matches the given ISO 3166-1 alpha-2 country code (case-insensitive)
+  repeated string ids = 1 [deprecated = true];     // DEPRECATED. If specified, return banks whose 'id' matches any one of the given ids (case-insensitive). Can be at most 1000.
+  string search = 2 [deprecated = true];           // DEPRECATED. If specified, return banks whose 'name' or 'identifier' contains the given search string (case-insensitive)
+  string provider = 7 [deprecated = true];         // DEPRECATED. (Optional) If specified, return banks whose 'provider' matches the provider (case-insensitive)
+  string tpp_id = 8 [deprecated = true];           // DEPRECATED. (Optional) If specified, return banks which are integrated with the TPP
+  string destination_country = 10 [deprecated = true]; // DEPRECATED. (Optional) Filter for banks that support sending to the destination country.
+}
+
+message GetBanksResponse {
+  repeated io.token.proto.common.bank.Bank banks = 1; // List of "link-able" banks
+  io.token.proto.common.bank.Paging paging = 2;       // Paging info
+}
+
+message GetBankInfoRequest {
+  string bank_id = 1; // Bank id
+}
+
+message GetBankInfoResponse {
+  io.token.proto.common.bank.BankInfo info = 1; // Linking info
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Keychain management.
+//
+
+message CreateKeychainRequest {
+  string name = 1;
+}
+
+message CreateKeychainResponse {
+  string keychain_id = 1;
+}
+
+message UpdateKeychainInfoRequest {
+  string keychain_id = 1;
+  string name = 2;
+}
+
+message UpdateKeychainInfoResponse {}
+
+message GetKeychainsRequest {}
+
+message GetKeychainsResponse {
+  repeated io.token.proto.common.member.Keychain keychains = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Bank member only requests.
+//
+message GetMemberInfoRequest {
+  string member_id = 1;
+}
+
+message GetMemberInfoResponse {
+  io.token.proto.common.member.MemberInfo member_info = 1; // Member info
+}
+
+message GetConsentRequest {
+  string bank_id = 1;
+  string consent_id = 2;
+}
+
+message GetConsentResponse {
+  io.token.proto.common.consent.Consent consent = 1;
+}
+
+message GetConsentsRequest {
+  string bank_id = 1;
+  io.token.proto.common.account.BankAccount bank_account = 2;
+  Page page = 3;
+}
+
+message GetConsentsResponse {
+  repeated io.token.proto.common.consent.Consent consents = 1;
+  string offset = 2;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Testing API calls
+//
+
+message CreateTestBankAccountRequest {
+  io.token.proto.common.money.Money balance = 1; // starting balance
+}
+
+message CreateTestBankAccountResponse {
+  io.token.proto.banklink.OauthBankAuthorization authorization = 2; // authorization usable with linkAccounts
+}
+
+message GetTestBankNotificationRequest {
+  string subscriber_id = 1;   // subscriber ID
+  string notification_id = 2; // notification ID
+}
+
+message GetTestBankNotificationResponse {
+  io.token.proto.common.notification.Notification notification = 1; // notification
+}
+
+message GetTestBankNotificationsRequest {
+  string subscriber_id = 1; // subscriber ID
+}
+
+message GetTestBankNotificationsResponse {
+  repeated io.token.proto.common.notification.Notification notifications = 1; // list of notifications
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Report
+//
+
+message GetTppPerformanceReportRequest {
+  string bank_id = 1;
+  int32 days_back = 2;
+}
+
+message GetTppPerformanceReportResponse {
+  repeated PerformanceSummary summaries = 1;
+
+  message PerformanceSummary {
+    string date = 1;
+    TppType tpp_type = 2;
+    double p50_latency = 3;
+    double p75_latency = 4;
+    double p90_latency = 5;
+    double p95_latency = 6;
+    double p99_latency = 7;
+    double p999_latency = 8;
+    double error_rate = 9;
+    int64 error_count = 10;
+    int64 request_count = 11;
+
+    enum TppType {
+      AISP = 0;
+      PISP = 1;
+      CBPII = 2;
+    }
+  }
+}
+
+message GetAvailabilityReportRequest {
+  string bank_id = 1;
+  int32 days_back = 2;
+}
+
+message GetAvailabilityReportResponse {
+  repeated AvailabilitySummary summaries = 1;
+
+  message AvailabilitySummary {
+    string date = 1;
+    double token_uptime_pct = 2;
+    double bank_uptime_pct = 3;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Gateway Service.
+//
+service GatewayService {
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Member registration, key and alias management.
+  //
+
+  // Create a member. Mints a member ID; newly-created member does not yet
+  // have keys, alias, or anything other than an ID.
+  // Used by createMember, https://developer.token.io/sdk/#create-a-member
+  // (SDK's createMember also uses UpdateMember rpc).
+  rpc CreateMember (CreateMemberRequest) returns (CreateMemberResponse) {
+    option (google.api.http) = {
+        post: "/members"
+        body: "*"
+    };
+  }
+
+  // Apply member updates. Used when adding/removing keys, aliases to/from member.
+  // These updates require a signature.
+  // See how Java SDK's Client.updateMember uses it:
+  //   https://developer.token.io/sdk/javadoc/io/token/rpc/Client.html#updateMember-io.token.proto.common.member.MemberProtos.Member-java.util.List-
+  // See how JS SDK's AuthHttpClient._memberUpdate uses it:
+  //   https://developer.token.io/sdk/esdoc/class/src/http/AuthHttpClient.js~AuthHttpClient.html#instance-method-_memberUpdate
+  rpc UpdateMember (UpdateMemberRequest) returns (UpdateMemberResponse) {
+    option (google.api.http) = {
+        post: "/members/{update.member_id}/updates"
+        body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // Get information about a member
+  rpc GetMember (GetMemberRequest) returns (GetMemberResponse) {
+    option (google.api.http) = {
+        get: "/members/{member_id}"
+    };
+  }
+
+  // set profile information (display name)
+  // Ignores picture fields; use SetProfilePicture for those.
+  // https://developer.token.io/sdk/#profile
+  rpc SetProfile (SetProfileRequest) returns (SetProfileResponse) {
+    option (google.api.http) = {
+        put: "/profile"
+        body: "*"
+    };
+  }
+
+  // get a member's profile (display information)
+  // https://developer.token.io/sdk/#profile
+  rpc GetProfile (GetProfileRequest) returns (GetProfileResponse) {
+    option (google.api.http) = {
+        get: "/members/{member_id}/profile"
+    };
+  }
+
+  // upload an image to use as auth'd member's profile picture
+  // Automatically creates smaller sizes; this works best with square images.
+  // https://developer.token.io/sdk/#profile
+  rpc SetProfilePicture (SetProfilePictureRequest) returns (SetProfilePictureResponse) {
+    option (google.api.http) = {
+        put: "/profilepicture"
+        body: "*"
+    };
+  }
+
+  // Get member's profile picture (can also use GetBlob with a blob ID from profile)
+  // https://developer.token.io/sdk/#profile
+  rpc GetProfilePicture (GetProfilePictureRequest) returns (GetProfilePictureResponse) {
+    option (google.api.http) = {
+        get: "/members/{member_id}/profilepicture/{size}"
+    };
+  }
+
+  // Set a member's contact (e.g. email) for receipt delivery
+  rpc SetReceiptContact (SetReceiptContactRequest) returns (SetReceiptContactResponse) {
+    option (google.api.http) = {
+        put: "/receipt-contact"
+        body: "*"
+    };
+  }
+
+  // Get a member's email address for receipts
+  rpc GetReceiptContact (GetReceiptContactRequest) returns (GetReceiptContactResponse) {
+    option (google.api.http) = {
+        get: "/receipt-contact"
+    };
+  }
+
+  // Get ID of member that owns an alias, if any.
+  // https://developer.token.io/sdk/#aliases
+  rpc ResolveAlias (ResolveAliasRequest) returns (ResolveAliasResponse) {
+    option (google.api.http) = {
+      get: "/resolve-alias"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // Get the auth'd member's aliases.
+  // https://developer.token.io/sdk/#aliases
+  rpc GetAliases (GetAliasesRequest) returns (GetAliasesResponse) {
+    option (google.api.http) = {
+      get: "/aliases"
+    };
+  }
+
+  // Use a verification code
+  rpc CompleteVerification (CompleteVerificationRequest) returns (CompleteVerificationResponse) {
+    option (google.api.http) = {
+      get: "/verifications/{verification_id}/complete/{code}"
+    };
+  }
+
+  // Retries verification. For example, if verifying an email alias,
+  // re-sends verification-code email to the email address.
+  rpc RetryVerification (RetryVerificationRequest) returns (RetryVerificationResponse) {
+    option (google.api.http) = {
+      post: "/verifications"
+      body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // Get auth'd members paired devices (as created by provisionDevice)
+  rpc GetPairedDevices (GetPairedDevicesRequest) returns (GetPairedDevicesResponse) {
+    option (google.api.http) = {
+      get: "/members/devices"
+    };
+  }
+
+  rpc DeleteMember (DeleteMemberRequest) returns (DeleteMemberResponse) {
+    option (google.api.http) = {
+      delete: "/members"
+    };
+  }
+
+  rpc NormalizeAlias (NormalizeAliasRequest) returns (NormalizeAliasResponse) {
+    option (google.api.http) = {
+        get: "/aliases/normalize/{alias.type}/{alias.value}/{alias.realm}"
+    };
+  }
+
+  rpc VerifyAffiliate (VerifyAffiliateRequest) returns (VerifyAffiliateResponse) {
+    option (google.api.http) = {
+        put: "/members/affiliates/verify"
+        body: "*"
+    };
+  }
+
+  rpc SetAppCallbackUrl (SetAppCallbackUrlRequest) returns (SetAppCallbackUrlResponse) {
+    option (google.api.http) = {
+        put: "/members/app-callback-url"
+        body: "*"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Member account recovery
+  //
+
+  // Begin member recovery. If the member has a "normal consumer" recovery rule,
+  // this sends a recovery message to their email address.
+  // https://developer.token.io/sdk/#recovery
+  rpc BeginRecovery (BeginRecoveryRequest) returns (BeginRecoveryResponse) {
+    option (google.api.http) = {
+      post: "/recovery/verifications"
+      body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // Complete member recovery.
+  // https://developer.token.io/sdk/#recovery
+  rpc CompleteRecovery (CompleteRecoveryRequest) returns (CompleteRecoveryResponse) {
+    option (google.api.http) = {
+      post: "/recovery/verifications/{verification_id}/complete/{code}"
+      body: "*"
+    };
+  }
+
+  // Verify an alias
+  rpc VerifyAlias (VerifyAliasRequest) returns (VerifyAliasResponse) {
+    option (google.api.http) = {
+      put: "/verifications/{verification_id}/complete/{code}"
+      body: "*"
+    };
+  }
+
+  // Verify an eidas
+  rpc VerifyEidas (VerifyEidasRequest) returns (VerifyEidasResponse) {
+    option (google.api.http) = {
+      put: "/verifications/eidas"
+      body: "*"
+    };
+  }
+
+  // Get member ID of "normal consumer" recovery agent.
+  // https://developer.token.io/sdk/#recovery
+  rpc GetDefaultAgent (GetDefaultAgentRequest) returns (GetDefaultAgentResponse) {
+    option (google.api.http) = {
+      get: "/recovery/defaults/agent"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Member addresses and preferences
+  //
+
+  // Add a shipping address
+  // https://developer.token.io/sdk/#address
+  rpc AddAddress (AddAddressRequest) returns (AddAddressResponse) {
+    option (google.api.http) = {
+        post: "/addresses"
+        body: "*"
+    };
+  }
+
+  // Get one of the auth'd member's shipping addresses
+  // https://developer.token.io/sdk/#address
+  rpc GetAddress (GetAddressRequest) returns (GetAddressResponse) {
+    option (google.api.http) = {
+        get: "/addresses/{address_id}"
+    };
+  }
+
+  // Get all of the auth'd member's shipping addresses
+  // https://developer.token.io/sdk/#address
+  rpc GetAddresses (GetAddressesRequest) returns (GetAddressesResponse) {
+    option (google.api.http) = {
+        get: "/addresses"
+    };
+  }
+
+  // Remove one of the auth'd member's shipping addresses
+  // https://developer.token.io/sdk/#address
+  rpc DeleteAddress (DeleteAddressRequest) returns (DeleteAddressResponse) {
+    option (google.api.http) = {
+        delete: "/addresses/{address_id}"
+    };
+  }
+
+  // Add a trusted beneficiary
+  // https://developer.token.io/sdk/#trusted-beneficiary
+  rpc AddTrustedBeneficiary (AddTrustedBeneficiaryRequest) returns (AddTrustedBeneficiaryResponse) {
+    option (google.api.http) = {
+        post: "/trusted-beneficiaries"
+        body: "*"
+    };
+  }
+
+  // Remove a trusted beneficiary
+  // https://developer.token.io/sdk/#trusted-beneficiary
+  rpc RemoveTrustedBeneficiary (RemoveTrustedBeneficiaryRequest) returns (RemoveTrustedBeneficiaryResponse) {
+    option (google.api.http) = {
+        delete: "/trusted-beneficiaries/{trusted_beneficiary.payload.member_id}"
+    };
+  }
+
+  // Get all trusted beneficiaries
+  // https://developer.token.io/sdk/#trusted-beneficiary
+  rpc GetTrustedBeneficiaries (GetTrustedBeneficiariesRequest) returns (GetTrustedBeneficiariesResponse) {
+    option (google.api.http) = {
+        get: "/trusted-beneficiaries"
+    };
+  }
+
+  // Set Customization
+  // https://developer.token.io/sdk/#customization
+  rpc CreateCustomization (CreateCustomizationRequest) returns (CreateCustomizationResponse) {
+  option (google.api.http) = {
+        post: "/customization"
+        body: "*"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Devices for notification service
+  //
+
+  // subscribe member to notifications
+  // https://developer.token.io/sdk/#notifications
+  rpc SubscribeToNotifications (SubscribeToNotificationsRequest) returns (SubscribeToNotificationsResponse) {
+    option (google.api.http) = {
+        post: "/subscribers"
+        body: "*"
+    };
+  }
+
+  // get member's notification subscriber[s]
+  // https://developer.token.io/sdk/#notifications
+  rpc GetSubscribers (GetSubscribersRequest) returns (GetSubscribersResponse) {
+    option (google.api.http) = {
+        get: "/subscribers"
+    };
+  }
+
+  // get one of a member's notification subscribers
+  // https://developer.token.io/sdk/#notifications
+  rpc GetSubscriber (GetSubscriberRequest) returns (GetSubscriberResponse) {
+    option (google.api.http) = {
+        get: "/subscribers/{subscriber_id}"
+    };
+  }
+
+  // unsubscribe one of a member's subscribers from notifications
+  // https://developer.token.io/sdk/#notifications
+  rpc UnsubscribeFromNotifications (UnsubscribeFromNotificationsRequest) returns (UnsubscribeFromNotificationsResponse) {
+    option (google.api.http) = {
+        delete: "/subscribers/{subscriber_id}"
+    };
+  }
+
+  // send a notification
+  // https://developer.token.io/sdk/#notifications
+  rpc Notify (NotifyRequest) returns (NotifyResponse) {
+    option (google.api.http) = {
+        post: "/notify"
+        body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "notify-source-ip", path: "{REMOTE_ADDRESS}"},
+        {key: "notify-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // get notifications
+  // https://developer.token.io/sdk/#polling-for-notifications
+  rpc GetNotifications (GetNotificationsRequest) returns (GetNotificationsResponse) {
+    option (google.api.http) = {
+        get: "/notifications"
+    };
+  }
+
+  // get one particular notification
+  // https://developer.token.io/sdk/#polling-for-notifications
+  rpc GetNotification (GetNotificationRequest) returns (GetNotificationResponse) {
+    option (google.api.http) = {
+        get: "/notifications/{notification_id}"
+    };
+  }
+
+  // send transfer-request notification
+  // https://developer.token.io/sdk/#request-payment
+  rpc RequestTransfer (RequestTransferRequest) returns (RequestTransferResponse) {
+    option (google.api.http) = {
+        post: "/request-transfer"
+        body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "notify-source-ip", path: "{REMOTE_ADDRESS}"},
+        {key: "notify-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // send step-up (approve with higher-privilege key) request notification
+  rpc TriggerStepUpNotification (TriggerStepUpNotificationRequest) returns (TriggerStepUpNotificationResponse) {
+    option (google.api.http) = {
+        post: "/notify/stepup"
+        body: "*"
+    };
+  }
+
+  // send endorse and add key notification (approve with higher-privilege key)
+  rpc TriggerEndorseAndAddKeyNotification (TriggerEndorseAndAddKeyNotificationRequest) returns (TriggerEndorseAndAddKeyNotificationResponse) {
+    option deprecated = true;         // Use CreateAndEndorseToken instead
+    option (google.api.http) = {
+        post: "/notify/endorse-and-add-key"
+        body: "*"
+    };
+  }
+
+  // send create and endorse token notification
+  rpc TriggerCreateAndEndorseTokenNotification (TriggerCreateAndEndorseTokenNotificationRequest) returns (TriggerCreateAndEndorseTokenNotificationResponse) {
+    option (google.api.http) = {
+        post: "/notify/create-and-endorse-token"
+        body: "*"
+    };
+  }
+
+  // send invalidate notification
+  rpc InvalidateNotification (InvalidateNotificationRequest) returns (InvalidateNotificationResponse) {
+    option (google.api.http) = {
+        post: "/notify/invalidate-notification"
+        body: "*"
+    };
+  }
+
+  // update notification status
+  rpc UpdateNotificationStatus (UpdateNotificationStatusRequest) returns (UpdateNotificationStatusResponse) {
+  option (google.api.http) = {
+        put: "/notifications/{notification_id}/status"
+        body: "*"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Bank accounts.
+  //
+
+  // associate bank accounts with member
+  // https://developer.token.io/sdk/#link-a-bank-account
+  rpc LinkAccounts (LinkAccountsRequest) returns (LinkAccountsResponse) {
+    option (google.api.http) = {
+        post: "/accounts"
+        body: "*"
+    };
+  }
+
+  // associate bank accounts with member
+  // https://developer.token.io/sdk/#link-a-bank-account
+  rpc LinkAccountsOauth (LinkAccountsOauthRequest) returns (LinkAccountsOauthResponse) {
+    option (google.api.http) = {
+        post: "/bank-accounts"
+        body: "*"
+    };
+  }
+
+  // un-associate bank accounts with member
+  // https://developer.token.io/sdk/#link-a-bank-account
+  rpc UnlinkAccounts (UnlinkAccountsRequest) returns (UnlinkAccountsResponse) {
+    option (google.api.http) = {
+        delete: "/accounts"
+        body: "*"
+    };
+  }
+
+  // get info about one linked account
+  // https://developer.token.io/sdk/#get-accounts
+  rpc GetAccount (GetAccountRequest) returns (GetAccountResponse) {
+    option (google.api.http) = {
+        get: "/accounts/{account_id}"
+    };
+  }
+
+  // get info about linked accounts
+  // https://developer.token.io/sdk/#get-accounts
+  rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse) {
+    option (google.api.http) = {
+        get: "/accounts"
+    };
+  }
+
+  // get current and available balance for a linked account
+  // https://developer.token.io/sdk/#get-account-balance
+  rpc GetBalance (GetBalanceRequest) returns (GetBalanceResponse) {
+    option (google.api.http) = {
+        get: "/accounts/{account_id}/balance"
+    };
+  }
+
+  rpc GetBalances (GetBalancesRequest) returns (GetBalancesResponse) {
+    option (google.api.http) = {
+        get: "/accounts/balance"
+    };
+  }
+
+  // get information about a particular transaction
+  // https://developer.token.io/sdk/#get-transactions
+  rpc GetTransaction (GetTransactionRequest) returns (GetTransactionResponse) {
+    option (google.api.http) = {
+        get: "/accounts/{account_id}/transaction/{transaction_id}"
+    };
+  }
+
+  // get information about several transactions
+  // https://developer.token.io/sdk/#get-transactions
+  rpc GetTransactions (GetTransactionsRequest) returns (GetTransactionsResponse) {
+    option (google.api.http) = {
+        get: "/accounts/{account_id}/transactions"
+    };
+  }
+
+  rpc ApplySca (ApplyScaRequest) returns (ApplyScaResponse) {
+    option (google.api.http) = {
+        put: "/accounts/sca"
+        body: "*"
+    };
+  }
+
+  // Get information about the auth'd member's default account.
+  // https://developer.token.io/sdk/#default-bank-account
+  rpc GetDefaultAccount (GetDefaultAccountRequest) returns (GetDefaultAccountResponse) {
+    option (google.api.http) = {
+      get: "/members/{member_id}/default-account"
+    };
+  }
+
+  // Set one auth'd member's accounts as its default account.
+  // https://developer.token.io/sdk/#default-bank-account
+  rpc SetDefaultAccount (SetDefaultAccountRequest) returns (SetDefaultAccountResponse) {
+    option (google.api.http) = {
+      put: "/members/{member_id}/default-account"
+      body: "*"
+    };
+  }
+
+  // Get the resolved transfer destinations of the given account.
+  rpc ResolveTransferDestinations (ResolveTransferDestinationsRequest) returns (ResolveTransferDestinationsResponse) {
+    option (google.api.http) = {
+      get: "/accounts/{account_id}/transfer-destinations"
+    };
+  }
+
+  // Confirm that the given account has sufficient funds to cover the charge.
+  rpc ConfirmFunds (ConfirmFundsRequest) returns (ConfirmFundsResponse) {
+    option (google.api.http) = {
+      put: "/accounts/{account_id}/funds-confirmation"
+      body: "*"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Testing.
+  //
+
+  // Create a test account at "iron" test bank.
+  // https://developer.token.io/sdk/#link-a-bank-account
+  rpc CreateTestBankAccount (CreateTestBankAccountRequest) returns (CreateTestBankAccountResponse) {
+    option (google.api.http) = {
+        post: "/test/create-account"
+        body: "*"
+    };
+  }
+
+  // Get notification from "iron" test bank. Useful for Token when testing its test bank.
+  // Normal way to get a notification is GetNotification.
+  rpc GetTestBankNotification (GetTestBankNotificationRequest) returns (GetTestBankNotificationResponse) {
+    option (google.api.http) = {
+        get: "/test/subscribers/{subscriber_id}/notifications/{notification_id}"
+    };
+  }
+
+  // Get notifications from "iron" test bank. Useful for Token when testing its test bank.
+  // Normal way to get notifications is GetNotifications.
+  rpc GetTestBankNotifications (GetTestBankNotificationsRequest) returns (GetTestBankNotificationsResponse) {
+    option (google.api.http) = {
+        get: "/test/subscribers/{subscriber_id}/notifications"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Blobs.
+  //
+
+  // Create a blob.
+  // https://developer.token.io/sdk/#transfer-token-options
+  rpc CreateBlob (CreateBlobRequest) returns (CreateBlobResponse) {
+    option (google.api.http) = {
+        post: "/blobs"
+        body: "*"
+    };
+  }
+
+  // Fetch a blob. Works if the authenticated member is the blob's
+  // owner or if the blob is public-access.
+  // https://developer.token.io/sdk/#transfer-token-options
+  rpc GetBlob (GetBlobRequest) returns (GetBlobResponse) {
+    option (google.api.http) = {
+        get: "/blobs/{blob_id}"
+    };
+  }
+
+  // Fetch a blob using a Token's authority. Works if Blob is attached to token
+  // and authenticated member is the Token's "from" or "to".
+  // https://developer.token.io/sdk/#transfer-token-options
+  rpc GetTokenBlob (GetTokenBlobRequest) returns (GetTokenBlobResponse) {
+    option (google.api.http) = {
+        get: "/tokens/{token_id}/blobs/{blob_id}"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Tokens Requests.
+  //
+
+  // Store a Token Request
+  rpc StoreTokenRequest (StoreTokenRequestRequest) returns (StoreTokenRequestResponse) {
+    option (google.api.http) = {
+        post: "/token-requests"
+        body: "*"
+    };
+  }
+
+  // Retrieve a Token Request
+  rpc RetrieveTokenRequest (RetrieveTokenRequestRequest) returns (RetrieveTokenRequestResponse) {
+    option (google.api.http) = {
+        get: "/token-requests/{request_id}"
+    };
+  }
+
+  rpc UpdateTokenRequest (UpdateTokenRequestRequest) returns (UpdateTokenRequestResponse) {
+    option (google.api.http) = {
+        put: "/token-requests/{request_id}"
+        body: "*"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Tokens.
+  //
+
+  // Prepare a token (resolve token payload and determine policy)
+  rpc PrepareToken (PrepareTokenRequest) returns (PrepareTokenResponse) {
+    option (google.api.http) = {
+        post: "/tokens/prepare"
+        body: "*"
+    };
+  }
+
+  // Create a Token.
+  rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse) {
+    option (google.api.http) = {
+        post: "/tokens"
+        body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // Create a Transfer Token.
+  // https://developer.token.io/sdk/#create-transfer-token
+  rpc CreateTransferToken (CreateTransferTokenRequest) returns (CreateTransferTokenResponse) {
+    option (google.api.http) = {
+        // unused: use /tokens?type=transfer to reach this endpoint
+        post: "/transfer-tokens"
+        body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+    option deprecated = true; // use CreateToken instead
+  }
+
+  // Create an Access Token.
+  // https://developer.token.io/sdk/#create-access-token
+  rpc CreateAccessToken (CreateAccessTokenRequest) returns (CreateAccessTokenResponse) {
+    option (google.api.http) = {
+        // unused: use /tokens?type=access to reach this endpoint
+        post: "/access-tokens"
+        body: "*"
+    };
+    option (io.token.proto.extensions.service.rate_limit) = {
+      selector: [
+        {key: "resolve-alias-remote-address", path: "{REMOTE_ADDRESS}"},
+        {key: "resolve-alias-source-developer", path: "{DEVELOPER_ID}"}
+      ]
+    };
+  }
+
+  // Get information about one token.
+  // https://developer.token.io/sdk/#redeem-transfer-token
+  rpc GetToken (GetTokenRequest) returns (GetTokenResponse) {
+    option (google.api.http) = {
+        get: "/tokens/{token_id}"
+    };
+  }
+
+  // Get existing Access Token where the calling member is the
+  // remitter and provided member is the beneficiary.
+  rpc GetActiveAccessToken (GetActiveAccessTokenRequest) returns (GetActiveAccessTokenResponse) {
+    option (google.api.http) = {
+        get: "/tokens/active-access-token/{to_member_id}"
+    };
+  }
+
+  // Gets list of tokens the member has given/received.
+  // Used by getTransferTokens, getAccessTokens.
+  // https://developer.token.io/sdk/#get-tokens
+  // https://developer.token.io/sdk/#replace-access-token
+  rpc GetTokens (GetTokensRequest) returns (GetTokensResponse) {
+    option (google.api.http) = {
+        get: "/tokens"
+    };
+  }
+
+  // Endorse a token
+  // https://developer.token.io/sdk/#endorse-transfer-token
+  // https://developer.token.io/sdk/#endorse-access-token
+  rpc EndorseToken (EndorseTokenRequest) returns (EndorseTokenResponse) {
+    option (google.api.http) = {
+        put: "/tokens/{token_id}/endorse"
+        body: "*"
+    };
+  }
+
+  // Cancel a token
+  // https://developer.token.io/sdk/#cancel-transfer-token
+  // https://developer.token.io/sdk/#cancel-access-token
+  rpc CancelToken (CancelTokenRequest) returns (CancelTokenResponse) {
+    option (google.api.http) = {
+        put: "/tokens/{token_id}/cancel"
+        body: "*"
+    };
+  }
+
+  // Replace an access token
+  // https://developer.token.io/sdk/#replace-access-token
+  //
+  // See how replaceAndEndorseToken uses it:
+  //   https://developer.token.io/sdk/esdoc/class/src/http/AuthHttpClient.js~AuthHttpClient.html#instance-method-replaceAndEndorseToken
+  rpc ReplaceToken (ReplaceTokenRequest) returns (ReplaceTokenResponse) {
+    option (google.api.http) = {
+        post: "/tokens/{cancel_token.token_id}/replace"
+        body: "*"
+    };
+  }
+
+  // Request a Token signature on a token request state payload (tokenId | state)
+  rpc SignTokenRequestState (SignTokenRequestStateRequest) returns (SignTokenRequestStateResponse) {
+    option (google.api.http) = {
+        put: "/sign-token-request-state"
+        body: "*"
+    };
+  }
+
+  // Get the token request result from the token request id
+  rpc GetTokenRequestResult (GetTokenRequestResultRequest) returns (GetTokenRequestResultResponse) {
+    option (google.api.http) = {
+        get: "/token-requests/{token_request_id}/token_request_result"
+    };
+  }
+
+  // Gets a payload to sign
+  rpc GetAuthRequestPayload (GetAuthRequestPayloadRequest) returns (GetAuthRequestPayloadResponse) {
+    option (google.api.http) = {
+        get: "/auth-request-payloads/{auth_request_id}"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Token Transfers.
+  //
+
+  // Redeem a transfer token, creating a transfer.
+  // https://developer.token.io/sdk/#redeem-transfer-token
+  //
+  // See how redeemToken calls it:
+  //   https://developer.token.io/sdk/esdoc/class/src/http/AuthHttpClient.js~AuthHttpClient.html#instance-method-redeemToken
+  rpc CreateTransfer (CreateTransferRequest) returns (CreateTransferResponse) {
+    option (google.api.http) = {
+        post: "/transfers"
+        body: "*"
+    };
+  }
+
+  // Get information about one transfer.
+  // https://developer.token.io/sdk/#get-transfers
+  rpc GetTransfer (GetTransferRequest) returns (GetTransferResponse) {
+    option (google.api.http) = {
+        get: "/transfers/{transfer_id}"
+    };
+  }
+
+  // Get a list of the auth'd member's transfers.
+  // https://developer.token.io/sdk/#get-transfers
+  rpc GetTransfers (GetTransfersRequest) returns (GetTransfersResponse) {
+    option (google.api.http) = {
+        get: "/transfers"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Bank Information Endpoints.
+  //
+
+  // Get a list of "link-able" bank countries.
+  rpc GetBanksCountries (GetBanksCountriesRequest) returns (GetBanksCountriesResponse) {
+    option (google.api.http) = {
+        get: "/banks/countries"
+    };
+  }
+
+  // Get a list of "link-able" banks.
+  // https://developer.token.io/sdk/#link-a-bank-account
+  rpc GetBanks (GetBanksRequest) returns (GetBanksResponse) {
+    option (google.api.http) = {
+        get: "/banks"
+    };
+  }
+
+  // Get information useful for linking one bank.
+  // https://developer.token.io/sdk/#link-a-bank-account
+  rpc GetBankInfo (GetBankInfoRequest) returns (GetBankInfoResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bank_id}/info"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Keychain management.
+  //
+  // Create a keychain with a name.
+  rpc CreateKeychain (CreateKeychainRequest) returns (CreateKeychainResponse) {
+    option (google.api.http) = {
+        post: "/keychain"
+        body: "*"
+    };
+  }
+
+  // Update a keychain's info.
+  rpc UpdateKeychainInfo (UpdateKeychainInfoRequest) returns (UpdateKeychainInfoResponse) {
+    option (google.api.http) = {
+        put: "/keychain/id/info"
+        body: "*"
+    };
+  }
+
+  // Get all the keychains of a member.
+  rpc GetKeychains (GetKeychainsRequest) returns (GetKeychainsResponse) {
+    option (google.api.http) = {
+        get: "/keychains"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Bank member only requests.
+  //
+  // Get member information about a member who links at least an account from this bank
+  rpc GetMemberInfo (GetMemberInfoRequest) returns (GetMemberInfoResponse) {
+    option (google.api.http) = {
+        get: "/members/info/{member_id}"
+    };
+  }
+
+  rpc GetConsent (GetConsentRequest) returns (GetConsentResponse) {
+    option (google.api.http) = {
+        get: "/banks/{bank_id}/consents/{consent_id}"
+    };
+  }
+
+  rpc GetConsents (GetConsentsRequest) returns (GetConsentsResponse) {
+    option (google.api.http) = {
+        get: "/consents"
+    };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Reports (bank member only requests).
+  //
+  // Get TPP performance report.
+  rpc GetTppPerformanceReport (GetTppPerformanceReportRequest) returns (GetTppPerformanceReportResponse) {
+    option (google.api.http) = {
+        get: "/reports/{bank_id}/tpp_performance_report"
+    };
+  }
+
+  //Get availability report.
+  rpc GetAvailabilityReport (GetAvailabilityReportRequest) returns (GetAvailabilityReportResponse) {
+    option (google.api.http) = {
+        get: "/reports/{bank_id}/availability_report"
+    };
+  }
+}

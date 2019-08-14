@@ -13,7 +13,7 @@ from tokenio.token_request import TokenRequestState, TokenRequestCallbackParamet
 
 
 class TokenClient:
-    TOKEN_REQUEST_TEMPLATE = '{url}/app/request-token/{request_id}?state={state}'
+    TOKEN_REQUEST_TEMPLATE = '{url}/app/request-token/{request_id}'
 
     def __init__(self, config: Config):
         self.channel = Channel.channel_factory(
@@ -103,12 +103,9 @@ class TokenClient:
             ids, search, country, page, per_page, sort, provider
         )
 
-    def generate_token_request_url(self, request_id, state='', csrf_token=''):
-        csrf_token_hash = utils.hash_string(csrf_token)
-        token_request_state = TokenRequestState(csrf_token_hash, state)
+    def generate_token_request_url(self, request_id):
         return self.TOKEN_REQUEST_TEMPLATE.format(
             url=self.config.web_url,
-            state=token_request_state.serialize(),
             request_id=request_id
         )
 

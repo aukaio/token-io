@@ -13,12 +13,22 @@ from tokenio.token_request import TokenRequest
 from tokenio.utils import generate_nonce, proto_message_to_bytes
 
 
+@pytest.mark.skip(reason="Deprecated?")
 class TestAccessToken:
     TOKEN_LOOKUP_POLL_FREQUENCY = 1.5
 
     @classmethod
     def setup_class(cls):
         cls.client = utils.initialize_client()
+
+    def test_access_token_for_accounts(self):
+        member1 = self.client.create_member(utils.generate_alias(type=Alias.DOMAIN))
+        payload = AccessTokenBuilder.create_with_alias(member1.get_first_alias()).for_all_accounts().build()
+        access_token = member1.create_access_token(payload)
+        result = member1.get_token(access_token.id)
+        print(result)
+        assert access_token == result
+
 
     def test_get_access_token(self):
         member1 = self.client.create_member(utils.generate_alias(type=Alias.DOMAIN))
