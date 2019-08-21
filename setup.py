@@ -12,7 +12,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 install_requires = open("requirements.txt").readlines()
 
 setup(
-    name='TokenIO',
+    name='tokenio',
     version=tokenio.__version__,
     author='overcat',
     author_email='4catcode@gmail.com',
