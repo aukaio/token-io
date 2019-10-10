@@ -9,6 +9,7 @@ grpcio = "*"
 ed25519 = "*"
 base58 = "*"
 google-api = "*"
+googleapis-common-protos = "1.6.0"
 
 [dev-packages]
 grpcio-tools = "*"
