@@ -65,6 +65,9 @@ class Member:
     def get_balances(self, account_id: str, key_level: int):
         return self.client.get_balances(account_id, key_level)
 
+    def get_transfer_destinations(self, account_id: str):
+        return self.client.get_transfer_destinations(account_id)
+
     def get_transaction(self, account_id, transaction_id, key_level):
         return self.client.get_transaction(
             account_id, transaction_id, key_level

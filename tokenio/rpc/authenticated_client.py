@@ -5,7 +5,7 @@ from tokenio.proto.member_pb2 import MemberUpdate, RecoveryRule, MemberRecoveryR
     TrustedBeneficiary
 from tokenio.proto.security_pb2 import Key, Signature
 from tokenio.proto.token_pb2 import TokenRequestStatePayload, TokenMember, TokenPayload
-from tokenio.proto.gateway.gateway_pb2 import StoreTokenRequestRequest
+from tokenio.proto.gateway.gateway_pb2 import StoreTokenRequestRequest, ResolveTransferDestinationsRequest
 from tokenio.rpc.authentication_context import AuthenticationContext
 from tokenio.security.engines import CryptoEngine
 
@@ -194,6 +194,16 @@ class AuthenticatedClient:
         with self._channel as channel:
             response = channel.stub.CreateTransfer(request)
         return response.transfer
+
+    def get_transfer_destinations(self, account_id):
+        request = ResolveTransferDestinationsRequest(
+            account_id=account_id
+        )
+
+        with self._channel as channel:
+            response = channel.stub.ResolveTransferDestinations(request)
+
+        return response.transfer_destinations
 
     def _token_action_from_token(self, token, action):
         return self._token_action(token.payload, action)
